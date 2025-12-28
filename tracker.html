@@ -217,25 +217,33 @@
             transition: all 0.2s;
             flex-shrink: 0;
             margin-right: 14px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--card-bg);
         }
-        
+
         .habit-checkbox:hover {
             border-color: var(--accent);
         }
-        
-        .habit-checkbox.checked {
+
+        .habit-checkbox:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .habit-checkbox:checked {
             background: #1a5f5f;
             border-color: var(--accent);
         }
-        
-        .habit-checkbox.checked::after {
+
+        .habit-checkbox:checked::after {
             content: "✓";
             color: white;
             font-size: 16px;
             font-weight: bold;
         }
-        
-        .habit-checkbox.disabled {
+
+        .habit-checkbox:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -671,13 +679,17 @@
                 const isFocused = focusHabits.includes(h.id);
                 return `
                     <div class="habit-item ${isFocused ? 'focused' : ''}">
-                        <div class="habit-checkbox ${checked ? 'checked' : ''} ${isFutureDate ? 'disabled' : ''}" 
-                             data-habit="${h.id}"
-                             onclick="${isFutureDate ? '' : `toggleHabit('${h.id}')`}"></div>
-                        <div class="habit-info">
+                        <input type="checkbox"
+                               class="habit-checkbox"
+                               id="habit-${h.id}"
+                               ${checked ? 'checked' : ''}
+                               ${isFutureDate ? 'disabled' : ''}
+                               onchange="toggleHabit('${h.id}')"
+                               aria-label="${h.name}">
+                        <label for="habit-${h.id}" class="habit-info">
                             <div class="habit-name">${h.name}${isFocused ? ' 🎯' : ''}</div>
                             <div class="habit-detail">${h.detail}</div>
-                        </div>
+                        </label>
                         <div class="habit-streak">
                             <div class="count">${streak}</div>
                             <div class="label">streak</div>
@@ -766,22 +778,22 @@
         init();
     </script>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();

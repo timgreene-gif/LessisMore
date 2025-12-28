@@ -133,10 +133,25 @@
         .shopping-items { background: #fafafa; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 12px; }
         .shopping-item { display: flex; align-items: center; padding: 10px 12px; border-radius: 8px; transition: background 0.2s; gap: 12px; }
         .shopping-item:hover { background: #f0f0f0; }
-        .item-checkbox { width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+        .item-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--card-bg);
+        }
         .item-checkbox:hover { border-color: var(--accent); }
-        .item-checkbox.checked { background: #1a5f5f; border-color: var(--accent); }
-        .item-checkbox.checked::after { content: "✓"; color: white; font-size: 14px; font-weight: bold; }
+        .item-checkbox:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .item-checkbox:checked { background: #1a5f5f; border-color: var(--accent); }
+        .item-checkbox:checked::after { content: "✓"; color: white; font-size: 14px; font-weight: bold; }
         .shopping-item.checked .item-name { text-decoration: line-through; color: var(--text-muted); }
         .item-name { flex: 1; font-size: 14px; color: var(--text); }
         .item-nutrients { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
@@ -639,13 +654,20 @@
                     <div class="shopping-section">
                         <div class="section-header">${cat.name}<span class="section-count">${checkedCount}/${catFoods.length}</span></div>
                         <div class="shopping-items">
-                            ${catFoods.map(f => `
+                            ${catFoods.map(f => {
+                                const itemId = f.name.replace(/\\s/g, '-').toLowerCase();
+                                return `
                                 <div class="shopping-item ${checkedItems[f.name] ? 'checked' : ''}">
-                                    <div class="item-checkbox ${checkedItems[f.name] ? 'checked' : ''}" onclick="toggleItem('${f.name}')"></div>
-                                    <span class="item-name">${f.name}</span>
+                                    <input type="checkbox"
+                                           class="item-checkbox"
+                                           id="item-${itemId}"
+                                           ${checkedItems[f.name] ? 'checked' : ''}
+                                           onchange="toggleItem('${f.name}')"
+                                           aria-label="${f.name}">
+                                    <label for="item-${itemId}" class="item-name">${f.name}</label>
                                     <div class="item-nutrients">${f.nutrients.slice(0, 3).map(n => `<span class="item-nutrient">${n}</span>`).join('')}</div>
                                 </div>
-                            `).join('')}
+                            `}).join('')}
                         </div>
                     </div>
                 `;
@@ -666,22 +688,22 @@
         init();
     </script>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();

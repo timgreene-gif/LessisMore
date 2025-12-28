@@ -535,6 +535,21 @@
         .tips-list li {
             margin-bottom: 4px;
         }
+
+        /* Form hints for accessibility */
+        .hint {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-style: italic;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .form-group input:focus-visible,
+        .form-group select:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
@@ -599,12 +614,14 @@
                 <div class="log-form">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Test Date</label>
-                            <input type="date" id="testDate">
+                            <label for="testDate">Test Date</label>
+                            <input type="date" id="testDate" aria-describedby="testDate-hint">
+                            <span id="testDate-hint" class="hint">Date when bloodwork was drawn</span>
                         </div>
                         <div class="form-group">
-                            <label>Lab / Provider</label>
-                            <input type="text" id="labName" placeholder="Quest, LabCorp, etc.">
+                            <label for="labName">Lab / Provider</label>
+                            <input type="text" id="labName" placeholder="Quest, LabCorp, etc." aria-describedby="labName-hint">
+                            <span id="labName-hint" class="hint">Optional: Lab where test was performed</span>
                         </div>
                     </div>
                     
@@ -717,10 +734,14 @@
             const container = document.getElementById('markerInputs');
             if (selectedMarkers.length === 0) { container.innerHTML = ''; return; }
             container.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px;">
                     ${selectedMarkers.map(id => {
                         const m = markers.find(x => x.id === id);
-                        return `<div class="form-group"><label>${m.name}</label><input type="number" step="0.1" id="value_${m.id}" placeholder="${m.unit}"></div>`;
+                        return `<div class="form-group">
+                            <label for="value_${m.id}">${m.name}</label>
+                            <input type="number" step="0.1" id="value_${m.id}" placeholder="${m.unit}" aria-describedby="hint_${m.id}">
+                            <span id="hint_${m.id}" class="hint">Optimal: ${m.optimal[0]}-${m.optimal[1]} ${m.unit}</span>
+                        </div>`;
                     }).join('')}
                 </div>`;
         }
@@ -930,22 +951,22 @@
         init();
     </script>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();

@@ -112,6 +112,13 @@
         .disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
         .disclaimer-title { font-size: 12px; font-weight: 600; color: #856404; margin-bottom: 4px; }
         .disclaimer-text { font-size: 11px; color: #856404; line-height: 1.5; }
+
+        /* Safety Warning */
+        .warning-box { background: #fde8e8; border: 2px solid #e74c3c; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .warning-box strong { color: #c0392b; }
+        .warning-box ul { margin: 10px 0 0 20px; font-size: 13px; color: #721c24; line-height: 1.6; }
+        .warning-box li { margin-bottom: 8px; }
+        .warning-box li:last-child { margin-bottom: 0; }
         
         .cross-links { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
         .cross-link { background: var(--card-bg); padding: 10px 16px; border-radius: 10px; text-decoration: none; color: #8e44ad; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -135,7 +142,16 @@
             <div class="disclaimer-title">⚠️ Important Disclaimer</div>
             <div class="disclaimer-text">This tool provides general educational information only. It is not medical advice. Always consult your doctor or pharmacist before making changes to your diet or supplements, especially while taking medications. Some nutrients can interact with medications.</div>
         </div>
-        
+
+        <div class="warning-box" role="alert">
+            <strong>⚠️ Critical Drug-Nutrient Interactions:</strong>
+            <ul>
+                <li><strong>Warfarin users:</strong> Changes in Vitamin K intake can significantly affect your INR and bleeding risk. Consult your doctor before any dietary changes involving leafy greens or supplements.</li>
+                <li><strong>Blood pressure medications:</strong> Potassium supplements or high-potassium diets can cause dangerous interactions with ACE inhibitors, ARBs, and potassium-sparing diuretics.</li>
+                <li><strong>Thyroid medications:</strong> Take calcium, iron, and other supplements at least 4 hours apart from levothyroxine to avoid absorption interference.</li>
+            </ul>
+        </div>
+
         <div class="status-message" id="statusMessage">✓ Results saved to your profile</div>
         
         <div class="card">
@@ -598,22 +614,22 @@
         init();
     </script>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();
