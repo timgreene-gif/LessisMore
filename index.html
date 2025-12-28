@@ -113,6 +113,44 @@
         .install-prompt button { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 12px; }
         .install-btn { background: var(--accent); color: white; }
         .dismiss-btn { background: var(--tag-bg); color: var(--text-secondary); }
+        /* Start Here indicator for first-time users */
+        .card.start-here { position: relative; }
+        .card.start-here::before {
+            content: "Start Here →";
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: var(--accent);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.02); }
+        }
+        /* Completion badges */
+        .card.completed { position: relative; }
+        .card.completed::after {
+            content: "✓";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4a7c59;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -264,6 +302,36 @@
                 .then(reg => console.log('SW registered'))
                 .catch(err => console.log('SW registration failed:', err));
         }
+
+        // First-time user guidance and completion badges
+        function updateDashboardBadges() {
+            const completed = {
+                calculator: !!localStorage.getItem('calculatorResults'),
+                symptoms: !!localStorage.getItem('selectedSymptoms'),
+                medications: !!localStorage.getItem('medications'),
+                bloodwork: !!localStorage.getItem('bloodworkResults'),
+                tracker: !!localStorage.getItem('habits')
+            };
+
+            // Apply completion badges
+            Object.entries(completed).forEach(([key, done]) => {
+                const card = document.querySelector(`a[href="${key}.html"]`);
+                if (card && done) {
+                    card.classList.add('completed');
+                }
+            });
+
+            // Show "Start Here" if calculator not completed
+            if (!completed.calculator) {
+                const calculatorCard = document.querySelector('a[href="calculator.html"]');
+                if (calculatorCard) {
+                    calculatorCard.classList.add('start-here');
+                }
+            }
+        }
+
+        // Run on DOM load
+        document.addEventListener('DOMContentLoaded', updateDashboardBadges);
     </script>
 </body>
 </html>

@@ -464,6 +464,49 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
+
+        /* Mobile week view improvements */
+        @media (max-width: 400px) {
+            .week-view {
+                overflow-x: visible;
+            }
+            .week-grid {
+                display: flex;
+                flex-direction: column;
+                min-width: unset;
+                gap: 0;
+            }
+            .week-grid .header {
+                display: none;
+            }
+            .week-grid .habit-label {
+                background: var(--accent-light);
+                padding: 10px 12px;
+                margin-top: 8px;
+                border-radius: 8px 8px 0 0;
+                font-weight: 600;
+            }
+            .week-grid .habit-label:first-of-type {
+                margin-top: 0;
+            }
+            .week-grid .day-cell {
+                width: 100%;
+                height: auto;
+                padding: 10px 12px;
+                border-bottom: 1px solid var(--border);
+                border-radius: 0;
+                justify-content: flex-start;
+            }
+            .week-grid .day-cell::before {
+                content: attr(data-day);
+                margin-right: 12px;
+                min-width: 60px;
+                font-weight: 500;
+            }
+            .week-grid .day-cell:last-of-type {
+                border-radius: 0 0 8px 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -781,6 +824,7 @@
                 html += `<div class="header">${days[i]}<br>${d.getDate()}</div>`;
             }
             
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             habits.forEach(h => {
                 html += `<div class="habit-label">${h.name}</div>`;
                 for (let i = 0; i < 7; i++) {
@@ -790,14 +834,15 @@
                     const complete = data[dk] && data[dk][h.id];
                     const todayCell = isToday(d);
                     const futureCell = isFuture(d);
-                    
+
                     let cls = 'day-cell';
                     if (futureCell) cls += ' future';
                     else if (complete) cls += ' completed';
                     else cls += ' missed';
                     if (todayCell) cls += ' today';
-                    
-                    html += `<div class="${cls}">${complete ? '✓' : ''}</div>`;
+
+                    const dayLabel = `${dayNames[i]} ${d.getDate()}`;
+                    html += `<div class="${cls}" data-day="${dayLabel}">${complete ? '✓' : ''}</div>`;
                 }
             });
             
