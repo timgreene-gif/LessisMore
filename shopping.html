@@ -655,11 +655,11 @@
         function toggleItem(name) { checkedItems[name] = !checkedItems[name]; saveChecked(); renderShoppingList(); }
         function uncheckAll() { checkedItems = {}; saveChecked(); renderShoppingList(); }
         function copyList() {
-            const unchecked = foods.filter(f => !checkedItems[f.name]);
+            const checked = foods.filter(f => checkedItems[f.name]);
             const grouped = {};
-            unchecked.forEach(f => { const cat = categories[f.category].name; if (!grouped[cat]) grouped[cat] = []; grouped[cat].push(f.name); });
+            checked.forEach(f => { const cat = categories[f.category].name; if (!grouped[cat]) grouped[cat] = []; grouped[cat].push(f.name); });
             let text = 'SHOPPING LIST\n\n';
-            Object.entries(grouped).forEach(([cat, items]) => { text += `${cat}\n`; items.forEach(item => text += `☐ ${item}\n`); text += '\n'; });
+            Object.entries(grouped).forEach(([cat, items]) => { text += `${cat}\n`; items.forEach(item => text += `✓ ${item}\n`); text += '\n'; });
             navigator.clipboard.writeText(text).then(() => alert('Copied!'));
         }
 
