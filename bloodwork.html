@@ -550,6 +550,27 @@
             outline: 3px solid var(--accent);
             outline-offset: 2px;
         }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -686,7 +707,46 @@
         let selectedMarkers = [];
         let logs = [];
         let activeFilter = 'all';
-        
+
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full. Please clear old data.');
+                } else {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function init() {
             loadLogs();
             renderMarkerSelect();
@@ -695,14 +755,13 @@
             renderTrendCharts();
             document.getElementById('testDate').valueAsDate = new Date();
         }
-        
+
         function loadLogs() {
-            const stored = localStorage.getItem('bloodwork_logs');
-            if (stored) logs = JSON.parse(stored);
+            logs = safeGetItem('bloodwork_logs', []);
         }
-        
+
         function saveLogs() {
-            localStorage.setItem('bloodwork_logs', JSON.stringify(logs));
+            safeSetItem('bloodwork_logs', logs);
         }
         
         function showTab(tabId) {
@@ -749,19 +808,19 @@
         function saveLogEntry() {
             const date = document.getElementById('testDate').value;
             const lab = document.getElementById('labName').value;
-            if (!date) { alert('Select a date'); return; }
-            if (selectedMarkers.length === 0) { alert('Select markers'); return; }
+            if (!date) { showToast('Please select a date'); return; }
+            if (selectedMarkers.length === 0) { showToast('Please select at least one marker'); return; }
             const values = {};
             selectedMarkers.forEach(id => {
                 const input = document.getElementById(`value_${id}`);
                 if (input && input.value) values[id] = parseFloat(input.value);
             });
-            if (Object.keys(values).length === 0) { alert('Enter values'); return; }
-            logs.push({ id: Date.now(), date, lab, values });
+            if (Object.keys(values).length === 0) { showToast('Please enter at least one value'); return; }
+            logs.push({ id: Date.now(), date, lab: escapeHtml(lab), values });
             logs.sort((a, b) => new Date(b.date) - new Date(a.date));
             saveLogs();
             clearForm();
-            alert('Saved!');
+            showToast('Results saved successfully!');
             showTab('history');
         }
         
@@ -930,8 +989,8 @@
                         renderHistory();
                         renderMarkerFilter();
                         renderTrendCharts();
-                        alert('Imported!');
-                    } catch (err) { alert('Invalid file'); }
+                        showToast('Data imported successfully!');
+                    } catch (err) { showToast('Invalid file format'); }
                 };
                 reader.readAsText(e.target.files[0]);
             };
@@ -950,6 +1009,8 @@
         
         init();
     </script>
+
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>

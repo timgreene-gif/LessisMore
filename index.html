@@ -179,7 +179,7 @@
         <footer>
             <p>No accounts. No tracking. No data collection. Just tools that work.</p>
         </footer>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
         
         <div class="install-prompt" id="installPrompt">
             <span style="font-size: 13px; color: var(--text-primary);">📱 Install app?</span>
@@ -200,8 +200,8 @@
         }
         
         function updateToggleIcon(theme) {
-            const btn = document.querySelector('.theme-toggle');
-            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            const span = document.querySelector('.theme-toggle span');
+            span.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
         
         // Load saved theme

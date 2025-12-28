@@ -438,6 +438,27 @@
         .habit-checkbox.just-checked {
             animation: celebrate 0.3s ease;
         }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -522,13 +543,52 @@
         let currentDate = new Date();
         let data = {};
         let focusHabits = [];
-        
+
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full. Please clear old data.');
+                } else {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function init() {
             loadData();
             checkFocusParams();
             render();
         }
-        
+
         function checkFocusParams() {
             const params = new URLSearchParams(window.location.search);
             const focus = params.get('focus');
@@ -537,20 +597,19 @@
                 document.getElementById('focusBanner').style.display = 'block';
             }
         }
-        
+
         function dismissFocus() {
             document.getElementById('focusBanner').style.display = 'none';
             // Clear URL params without reload
             window.history.replaceState({}, '', window.location.pathname);
         }
-        
+
         function loadData() {
-            const stored = localStorage.getItem('subtraction_habits');
-            if (stored) data = JSON.parse(stored);
+            data = safeGetItem('subtraction_habits', {});
         }
-        
+
         function saveData() {
-            localStorage.setItem('subtraction_habits', JSON.stringify(data));
+            safeSetItem('subtraction_habits', data);
         }
         
         function getDateKey(date) {
@@ -759,8 +818,8 @@
                         data = { ...data, ...imported };
                         saveData();
                         render();
-                        alert('Imported!');
-                    } catch (err) { alert('Invalid file'); }
+                        showToast('Data imported successfully!');
+                    } catch (err) { showToast('Invalid file format'); }
                 };
                 reader.readAsText(e.target.files[0]);
             };
@@ -777,6 +836,8 @@
         
         init();
     </script>
+
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>

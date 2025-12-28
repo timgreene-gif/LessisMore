@@ -84,6 +84,27 @@
         .intro li::before { content: "✓"; position: absolute; left: 0; color: #1a5f5f; font-weight: bold; }
         .start-btn { margin-top: 20px; padding: 14px 40px; font-size: 16px; }
         .saved-notice { background: #e8f5e8; color: #27ae60; padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; margin-bottom: 16px; }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -131,6 +152,36 @@
         const nutrients = { magnesium: { name: 'Magnesium', score: 0 }, b_vitamins: { name: 'B Vitamins', score: 0 }, vitamin_c: { name: 'Vitamin C', score: 0 }, vitamin_d: { name: 'Vitamin D', score: 0 }, iron: { name: 'Iron', score: 0 }, zinc: { name: 'Zinc', score: 0 }, calcium: { name: 'Calcium', score: 0 }, chromium: { name: 'Chromium', score: 0 }, potassium: { name: 'Potassium', score: 0 }, omega3: { name: 'Omega-3s', score: 0 } };
         let currentQuestion = 0;
         let answers = {};
+
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full. Please clear old data.');
+                } else {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function startQuiz() { document.getElementById('intro').style.display = 'none'; document.getElementById('quiz').style.display = 'block'; renderQuestion(); }
         function renderQuestion() {
             const container = document.getElementById('questionContainer');
@@ -177,7 +228,7 @@
                     results.factors.push({ id: q.id, name: labels[q.id], value: q.options[idx].value });
                 }
             });
-            localStorage.setItem('calculator_results', JSON.stringify(results));
+            safeSetItem('calculator_results', results);
         }
         function showResults() {
             document.getElementById('quiz').style.display = 'none';
@@ -240,6 +291,7 @@
             document.addEventListener('DOMContentLoaded', () => document.querySelector('.theme-toggle span').textContent = '☀️');
         }
     </script>
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
 </body>
 </html>

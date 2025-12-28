@@ -122,7 +122,28 @@
         
         .cross-links { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
         .cross-link { background: var(--card-bg); padding: 10px 16px; border-radius: 10px; text-decoration: none; color: #8e44ad; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         @media (max-width: 600px) {
             .summary-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
             .summary-stat-value { font-size: 22px; }
@@ -348,6 +369,45 @@
         let selectedMedications = [];
         let activeClass = null;
 
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full. Please clear old data.');
+                } else {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         // Initialize
         function init() {
             loadSaved();
@@ -357,11 +417,8 @@
         }
 
         function loadSaved() {
-            const saved = localStorage.getItem('medication_results');
-            if (saved) {
-                const data = JSON.parse(saved);
-                selectedMedications = data.medications || [];
-            }
+            const saved = safeGetItem('medication_results', { medications: [] });
+            selectedMedications = saved.medications || [];
         }
 
         function renderClassChips() {
@@ -601,8 +658,8 @@
                 }))
             };
 
-            localStorage.setItem('medication_results', JSON.stringify(data));
-            
+            safeSetItem('medication_results', data);
+
             const msg = document.getElementById('statusMessage');
             msg.classList.add('show');
             setTimeout(() => msg.classList.remove('show'), 3000);
@@ -613,6 +670,8 @@
 
         init();
     </script>
+
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>

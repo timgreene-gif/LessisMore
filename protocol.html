@@ -113,6 +113,28 @@
         .warning-box li { margin-bottom: 8px; }
         .warning-box li:last-child { margin-bottom: 0; }
         .warning-box p { font-size: 13px; color: #721c24; line-height: 1.6; margin-top: 8px; }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         @media print {
             body { background: var(--card-bg); padding: 0; font-size: 11pt; }
             .no-print { display: none !important; }
@@ -194,6 +216,31 @@
 
         let data = { calculator: null, symptoms: null, bloodwork: null, habits: null, medications: null };
 
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function init() {
             loadAllData();
             renderDataSources();
@@ -201,20 +248,16 @@
         }
 
         function loadAllData() {
-            const calc = localStorage.getItem('calculator_results');
-            if (calc) data.calculator = JSON.parse(calc);
-            
-            const symp = localStorage.getItem('symptom_results');
-            if (symp) data.symptoms = JSON.parse(symp);
-            
-            const blood = localStorage.getItem('bloodwork_logs');
-            if (blood) { const logs = JSON.parse(blood); if (logs.length > 0) data.bloodwork = logs; }
-            
-            const habits = localStorage.getItem('subtraction_habits');
-            if (habits) { const h = JSON.parse(habits); if (Object.keys(h).length > 0) data.habits = h; }
-            
-            const meds = localStorage.getItem('medication_results');
-            if (meds) data.medications = JSON.parse(meds);
+            data.calculator = safeGetItem('calculator_results', null);
+            data.symptoms = safeGetItem('symptom_results', null);
+
+            const blood = safeGetItem('bloodwork_logs', []);
+            if (blood && blood.length > 0) data.bloodwork = blood;
+
+            const habits = safeGetItem('subtraction_habits', {});
+            if (habits && Object.keys(habits).length > 0) data.habits = habits;
+
+            data.medications = safeGetItem('medication_results', null);
         }
 
         function renderDataSources() {
@@ -545,6 +588,8 @@
 
         init();
     </script>
+
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>

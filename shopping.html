@@ -167,6 +167,27 @@
         .cross-link { background: var(--card-bg); padding: 10px 16px; border-radius: 10px; text-decoration: none; color: var(--accent); font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .disclaimer { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; }
 
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         @media (max-width: 600px) {
             .meal-grid { grid-template-columns: 1fr; }
             .controls-row { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -445,6 +466,45 @@
         let checkedItems = {};
         let shoppingFilter = 'all';
 
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full. Please clear old data.');
+                } else {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function init() {
             loadChecked();
             renderMealTypeTabs();
@@ -456,12 +516,11 @@
         }
 
         function loadChecked() {
-            const stored = localStorage.getItem('shopping_checked');
-            if (stored) checkedItems = JSON.parse(stored);
+            checkedItems = safeGetItem('shopping_checked', {});
         }
 
         function saveChecked() {
-            localStorage.setItem('shopping_checked', JSON.stringify(checkedItems));
+            safeSetItem('shopping_checked', checkedItems);
         }
 
         function showTab(tabId) {
@@ -675,18 +734,29 @@
         }
 
         function toggleItem(name) { checkedItems[name] = !checkedItems[name]; saveChecked(); renderShoppingList(); }
-        function uncheckAll() { checkedItems = {}; saveChecked(); renderShoppingList(); }
+        function uncheckAll() { checkedItems = {}; saveChecked(); renderShoppingList(); showToast('All items unchecked'); }
         function copyList() {
             const checked = foods.filter(f => checkedItems[f.name]);
+
+            if (checked.length === 0) {
+                showToast('No items checked. Select items first.');
+                return;
+            }
+
             const grouped = {};
             checked.forEach(f => { const cat = categories[f.category].name; if (!grouped[cat]) grouped[cat] = []; grouped[cat].push(f.name); });
             let text = 'SHOPPING LIST\n\n';
             Object.entries(grouped).forEach(([cat, items]) => { text += `${cat}\n`; items.forEach(item => text += `✓ ${item}\n`); text += '\n'; });
-            navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+
+            navigator.clipboard.writeText(text)
+                .then(() => showToast(`${checked.length} items copied to clipboard!`))
+                .catch(() => showToast('Copy failed. Please select and copy manually.'));
         }
 
         init();
     </script>
+
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>

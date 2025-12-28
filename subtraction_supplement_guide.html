@@ -524,22 +524,22 @@
 <p class="footer">Share freely. Help others escape the loop.</p>
 
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();
