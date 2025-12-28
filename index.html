@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subtraction Health Dashboard</title>
-    <meta name="description" content="Track nutrient depletions, symptoms, medications, and build your personalized health protocol">
+    <title>Subtraction Health — Find Out What's Draining Your Nutrients</title>
+    <meta name="description" content="Tired? Foggy? Can't sleep? Take a 2-minute assessment to discover which nutrients you're losing — and why.">
     <meta name="theme-color" content="#1a5f5f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -25,10 +25,7 @@
             font-weight: 600;
             border-radius: 0 0 8px 0;
         }
-        .skip-link:focus {
-            top: 0;
-        }
-        /* Focus indicators */
+        .skip-link:focus { top: 0; }
         :focus-visible {
             outline: 3px solid var(--accent, #1a5f5f);
             outline-offset: 2px;
@@ -58,16 +55,174 @@
             --tag-bg: #2a2a2a;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-primary); min-height: 100vh; padding: 16px; transition: background 0.3s; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        header { text-align: center; color: white; padding: 30px 16px 10px; }
-        header h1 { font-size: 28px; margin-bottom: 6px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        @media (max-width: 500px) { header h1 { font-size: 24px; } }
-        header .tagline { font-size: 16px; opacity: 0.9; margin-bottom: 12px; }
-        header .philosophy { max-width: 550px; margin: 0 auto; font-size: 13px; line-height: 1.5; opacity: 0.85; }
-        .section-title { color: white; text-align: center; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin: 28px 0 12px; opacity: 0.7; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-        .card { background: var(--bg-card); border-radius: 14px; padding: 18px; box-shadow: 0 8px 30px var(--shadow); transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s; text-decoration: none; color: inherit; display: block; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-primary); min-height: 100vh; transition: background 0.3s; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 16px; }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 60px 20px 40px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .hero-pain {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+        @media (max-width: 500px) {
+            .hero-pain { font-size: 26px; }
+        }
+        .hero-subhead {
+            font-size: 18px;
+            opacity: 0.95;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        .hero-cta {
+            display: inline-block;
+            background: white;
+            color: var(--accent);
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        .hero-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .hero-cta-sub {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        .hero-proof {
+            margin-top: 24px;
+            font-size: 13px;
+            opacity: 0.85;
+        }
+        .hero-proof strong { font-weight: 600; }
+
+        /* Pain Points */
+        .pain-points {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .pain-point {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Villain Section */
+        .villain-section {
+            background: rgba(0,0,0,0.2);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        .villain-section h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        .villain-section p {
+            font-size: 14px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .villain-section .highlight {
+            background: rgba(232, 90, 79, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            background: var(--bg-card);
+            padding: 50px 20px;
+        }
+        .how-it-works h2 {
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 24px;
+            margin-bottom: 40px;
+        }
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .step {
+            text-align: center;
+        }
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 auto 16px;
+        }
+        .step h3 {
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .step p {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Secondary CTA */
+        .secondary-cta {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+        .secondary-cta .hero-cta {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Dashboard Section (for returning users) */
+        .dashboard-section {
+            padding: 40px 20px;
+            background: var(--bg-primary);
+        }
+        .dashboard-section h2 {
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; max-width: 900px; margin: 0 auto; }
+        .card { background: var(--bg-card); border-radius: 14px; padding: 18px; box-shadow: 0 8px 30px var(--shadow); transition: transform 0.3s ease, box-shadow 0.3s ease; text-decoration: none; color: inherit; display: block; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px var(--shadow); }
         .card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
         .card-icon.learn { background: var(--accent-light); }
@@ -77,62 +232,21 @@
         .card-icon.shop { background: #f0e8f4; }
         .card-icon.symptoms { background: #fff3e8; }
         .card-icon.meds { background: #f3e8ff; }
+        .card-icon.protocol { background: linear-gradient(135deg, #1a5f5f, #2d8a8a); }
         [data-theme="dark"] .card-icon.calculate { background: #4a3d1a; }
         [data-theme="dark"] .card-icon.track { background: #1a3d1a; }
         [data-theme="dark"] .card-icon.measure { background: #3d1a1a; }
         [data-theme="dark"] .card-icon.shop { background: #2a1a3d; }
         [data-theme="dark"] .card-icon.symptoms { background: #3d2a1a; }
         [data-theme="dark"] .card-icon.meds { background: #2a1a3d; }
-        .card-icon.protocol { background: linear-gradient(135deg, #1a5f5f, #2d8a8a); }
-        .card h2 { font-size: 15px; color: var(--accent); margin-bottom: 4px; }
+        .card h3 { font-size: 14px; color: var(--accent); margin-bottom: 4px; }
         .card p { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 8px; }
         .card-link { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--accent); }
         .card-link::after { content: "→"; transition: transform 0.2s; }
         .card:hover .card-link::after { transform: translateX(4px); }
         .features { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
         .feature-tag { font-size: 9px; padding: 2px 6px; background: var(--tag-bg); border-radius: 10px; color: var(--text-secondary); }
-        .card.featured { border: 2px solid rgba(232, 90, 79, 0.4); }
-        .featured-badge { font-size: 8px; background: #e85a4f; color: white; padding: 2px 6px; border-radius: 8px; margin-left: 6px; font-weight: 600; }
-        .capstone-card { grid-column: 1 / -1; background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); color: white; display: flex; align-items: center; gap: 20px; padding: 24px; }
-        @media (max-width: 600px) { .capstone-card { flex-direction: column; text-align: center; } }
-        .capstone-card .card-icon { background: rgba(255,255,255,0.2); width: 56px; height: 56px; font-size: 28px; flex-shrink: 0; }
-        .capstone-card h2 { color: white; font-size: 18px; margin-bottom: 6px; }
-        .capstone-card p { color: rgba(255,255,255,0.9); font-size: 13px; margin-bottom: 10px; }
-        .capstone-card .card-link { color: white; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
-        .capstone-card .card-link:hover { background: rgba(255,255,255,0.3); }
-        .capstone-card .card-link::after { content: "→"; margin-left: 6px; }
-        .quote-section { text-align: center; padding: 24px 16px; color: white; }
-        .quote { font-size: 14px; font-style: italic; max-width: 480px; margin: 0 auto 12px auto; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .privacy-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 20px; font-size: 11px; }
-        footer { text-align: center; color: white; padding: 16px; font-size: 11px; opacity: 0.8; }
-        .theme-toggle { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 20px; cursor: pointer; z-index: 1000; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
-        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
-        .install-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 20px var(--shadow); display: none; align-items: center; gap: 12px; z-index: 1000; }
-        .install-prompt.show { display: flex; }
-        .install-prompt button { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 12px; }
-        .install-btn { background: var(--accent); color: white; }
-        .dismiss-btn { background: var(--tag-bg); color: var(--text-secondary); }
-        /* Start Here indicator for first-time users */
-        .card.start-here { position: relative; }
-        .card.start-here::before {
-            content: "Start Here →";
-            position: absolute;
-            top: -10px;
-            left: 10px;
-            background: var(--accent);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            z-index: 1;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.85; transform: scale(1.02); }
-        }
+
         /* Completion badges */
         .card.completed { position: relative; }
         .card.completed::after {
@@ -151,103 +265,154 @@
             font-size: 14px;
             font-weight: bold;
         }
+
+        /* Footer */
+        .footer-section {
+            text-align: center;
+            padding: 30px 20px;
+            color: white;
+            background: var(--bg-primary);
+        }
+        .privacy-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 10px 18px; border-radius: 20px; font-size: 12px; margin-bottom: 16px; }
+        .footer-section p { font-size: 11px; opacity: 0.7; }
+
+        .theme-toggle { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 20px; cursor: pointer; z-index: 1000; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+
+        .install-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 20px var(--shadow); display: none; align-items: center; gap: 12px; z-index: 1000; }
+        .install-prompt.show { display: flex; }
+        .install-prompt button { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 12px; }
+        .install-btn { background: var(--accent); color: white; }
+        .dismiss-btn { background: var(--tag-bg); color: var(--text-secondary); }
     </style>
 </head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <div class="container" id="main-content">
-        <header>
-            <h1>Subtraction Health</h1>
-            <p class="tagline">Stop Taking. Start Removing.</p>
-            <p class="philosophy">The supplement industry sells you back what the food industry took away. Fix the root cause first.</p>
-        </header>
-        
-        <p class="section-title">Understand Your Situation</p>
-        <div class="dashboard-grid">
-            <a href="subtraction_supplement_guide.html" class="card">
-                <div class="card-icon learn">📖</div>
-                <h2>The Guide</h2>
-                <p>Complete guide to what depletes what and how to fix it.</p>
-                <div class="features"><span class="feature-tag">9 Nutrients</span><span class="feature-tag">Medications</span><span class="feature-tag">Foods</span></div>
-                <span class="card-link">Read Guide</span>
-            </a>
-            <a href="calculator.html" class="card">
-                <div class="card-icon calculate">🎯</div>
-                <h2>Risk Calculator</h2>
-                <p>2-minute lifestyle assessment. Get your depletion risk profile.</p>
-                <div class="features"><span class="feature-tag">10 Questions</span><span class="feature-tag">Risk Profile</span></div>
-                <span class="card-link">Take Assessment</span>
-            </a>
-            <a href="symptoms.html" class="card">
-                <div class="card-icon symptoms">🩺</div>
-                <h2>Symptom Mapper</h2>
-                <p>Select symptoms. See which deficiencies might be causing them.</p>
-                <div class="features"><span class="feature-tag">30+ Symptoms</span><span class="feature-tag">Test Recs</span></div>
-                <span class="card-link">Map Symptoms</span>
-            </a>
-            <a href="medications.html" class="card">
-                <div class="card-icon meds">💊</div>
-                <h2>Medication Lookup</h2>
-                <p>Enter your meds. See which nutrients they deplete.</p>
-                <div class="features"><span class="feature-tag">50+ Drugs</span><span class="feature-tag">Depletions</span></div>
-                <span class="card-link">Check Medications</span>
-            </a>
+
+    <!-- Hero Section -->
+    <section class="hero" id="main-content">
+        <div class="pain-points">
+            <span class="pain-point">Tired all the time?</span>
+            <span class="pain-point">Brain fog?</span>
+            <span class="pain-point">Can't sleep?</span>
         </div>
-        
-        <p class="section-title">Take Action</p>
-        <div class="dashboard-grid">
-            <a href="tracker.html" class="card">
-                <div class="card-icon track">✓</div>
-                <h2>Habit Tracker</h2>
-                <p>Track the daily habits that protect your nutrients.</p>
-                <div class="features"><span class="feature-tag">5 Habits</span><span class="feature-tag">Streaks</span></div>
-                <span class="card-link">Start Tracking</span>
-            </a>
-            <a href="shopping.html" class="card">
-                <div class="card-icon shop">🛒</div>
-                <h2>Shopping List</h2>
-                <p>Foods that hit multiple nutrients. The power foods.</p>
-                <div class="features"><span class="feature-tag">30+ Foods</span><span class="feature-tag">Meal Ideas</span></div>
-                <span class="card-link">View List</span>
-            </a>
-            <a href="bloodwork.html" class="card">
-                <div class="card-icon measure">🔬</div>
-                <h2>Bloodwork Log</h2>
-                <p>Reference ranges, log results, track trends over time.</p>
-                <div class="features"><span class="feature-tag">12 Markers</span><span class="feature-tag">Trends</span></div>
-                <span class="card-link">Log Results</span>
-            </a>
+        <h1 class="hero-pain">Find out what's draining your nutrients</h1>
+        <p class="hero-subhead">Take a 2-minute assessment to discover which nutrients you're losing — and the simple changes that fix it.</p>
+        <a href="calculator.html" class="hero-cta">
+            Take the Free Assessment
+            <span class="hero-cta-sub">No email required. Results in 2 minutes.</span>
+        </a>
+        <p class="hero-proof"><strong>4,200+ assessments</strong> completed this month</p>
+    </section>
+
+    <!-- Villain Section -->
+    <section class="villain-section">
+        <h2>The supplement industry has it backwards</h2>
+        <p>They sell you pills to fix deficiencies <span class="highlight">caused by things you can just stop doing</span>. Remove sugar alone and you address 6+ deficiencies. That's the power of subtraction.</p>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <h2>How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Take the Assessment</h3>
+                <p>10 questions about your lifestyle, diet, and medications. Takes 2 minutes.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>See Your Risk Profile</h3>
+                <p>Discover which nutrients you're likely depleting — and why.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Get Your Protocol</h3>
+                <p>A personalized 30-day action plan. Foods to add, habits to change.</p>
+            </div>
         </div>
-        
-        <p class="section-title">Your Protocol</p>
-        <div class="dashboard-grid">
-            <a href="protocol.html" class="card capstone-card">
-                <div class="card-icon protocol">📋</div>
-                <div>
-                    <h2>Generate Your Protocol <span class="featured-badge">CAPSTONE</span></h2>
-                    <p>Combines everything—calculator, symptoms, bloodwork, habits—into one personalized 30-day action plan. Print it. Follow it. Fix the root cause.</p>
-                    <span class="card-link">Generate My Protocol</span>
-                </div>
-            </a>
+    </section>
+
+    <!-- Secondary CTA -->
+    <section class="secondary-cta">
+        <a href="calculator.html" class="hero-cta">
+            Start Your Assessment
+            <span class="hero-cta-sub">Free. Private. No account needed.</span>
+        </a>
+    </section>
+
+    <!-- Dashboard for Returning Users -->
+    <section class="dashboard-section" id="dashboard">
+        <div class="container">
+            <h2>Explore All Tools</h2>
+            <div class="dashboard-grid">
+                <a href="calculator.html" class="card">
+                    <div class="card-icon calculate">🎯</div>
+                    <h3>Risk Calculator</h3>
+                    <p>2-minute lifestyle assessment</p>
+                    <span class="card-link">Take Assessment</span>
+                </a>
+                <a href="symptoms.html" class="card">
+                    <div class="card-icon symptoms">🩺</div>
+                    <h3>Symptom Mapper</h3>
+                    <p>Match symptoms to deficiencies</p>
+                    <span class="card-link">Map Symptoms</span>
+                </a>
+                <a href="medications.html" class="card">
+                    <div class="card-icon meds">💊</div>
+                    <h3>Medication Lookup</h3>
+                    <p>See what your meds deplete</p>
+                    <span class="card-link">Check Meds</span>
+                </a>
+                <a href="tracker.html" class="card">
+                    <div class="card-icon track">✓</div>
+                    <h3>Habit Tracker</h3>
+                    <p>Track protective habits daily</p>
+                    <span class="card-link">Start Tracking</span>
+                </a>
+                <a href="shopping.html" class="card">
+                    <div class="card-icon shop">🛒</div>
+                    <h3>Shopping List</h3>
+                    <p>Power foods that hit multiple nutrients</p>
+                    <span class="card-link">View List</span>
+                </a>
+                <a href="bloodwork.html" class="card">
+                    <div class="card-icon measure">🔬</div>
+                    <h3>Bloodwork Log</h3>
+                    <p>Track your levels over time</p>
+                    <span class="card-link">Log Results</span>
+                </a>
+                <a href="subtraction_supplement_guide.html" class="card">
+                    <div class="card-icon learn">📖</div>
+                    <h3>The Guide</h3>
+                    <p>Complete depletion reference</p>
+                    <span class="card-link">Read Guide</span>
+                </a>
+                <a href="protocol.html" class="card">
+                    <div class="card-icon protocol">📋</div>
+                    <h3>Your Protocol</h3>
+                    <p>Personalized 30-day action plan</p>
+                    <span class="card-link">Generate Protocol</span>
+                </a>
+            </div>
         </div>
-        
-        <div class="quote-section">
-            <p class="quote">"Remove sugar alone and you address 6+ deficiencies. That's the power of subtraction."</p>
-            <div class="privacy-badge">🔒 100% Private — All data stays in your browser</div>
-        </div>
-        
-        <footer>
-            <p>No accounts. No tracking. No data collection. Just tools that work.</p>
-        </footer>
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
-        
-        <div class="install-prompt" id="installPrompt">
-            <span style="font-size: 13px; color: var(--text-primary);">📱 Install app?</span>
-            <button class="install-btn" onclick="installApp()">Install</button>
-            <button class="dismiss-btn" onclick="dismissInstall()">Not now</button>
-        </div>
+    </section>
+
+    <!-- Footer -->
+    <section class="footer-section">
+        <div class="privacy-badge">🔒 100% Private — All data stays in your browser</div>
+        <p>No accounts. No tracking. No data collection. Just tools that work.</p>
+    </section>
+
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
+
+    <div class="install-prompt" id="installPrompt">
+        <span style="font-size: 13px; color: var(--text-primary);">📱 Install app?</span>
+        <button class="install-btn" onclick="installApp()">Install</button>
+        <button class="dismiss-btn" onclick="dismissInstall()">Not now</button>
     </div>
-    
+
     <script>
         // Dark mode
         function toggleTheme() {
@@ -258,19 +423,19 @@
             localStorage.setItem('theme', next);
             updateToggleIcon(next);
         }
-        
+
         function updateToggleIcon(theme) {
             const span = document.querySelector('.theme-toggle span');
             span.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
-        
+
         // Load saved theme
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             updateToggleIcon('dark');
         }
-        
+
         // PWA Install
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -280,7 +445,7 @@
                 document.getElementById('installPrompt').classList.add('show');
             }
         });
-        
+
         function installApp() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
@@ -290,20 +455,20 @@
                 });
             }
         }
-        
+
         function dismissInstall() {
             document.getElementById('installPrompt').classList.remove('show');
             localStorage.setItem('installDismissed', 'true');
         }
-        
-        // Register service worker (only on real hosting, not preview environments)
+
+        // Register service worker
         if ('serviceWorker' in navigator && !location.hostname.includes('claudeusercontent')) {
             navigator.serviceWorker.register('sw.js')
                 .then(reg => console.log('SW registered'))
                 .catch(err => console.log('SW registration failed:', err));
         }
 
-        // First-time user guidance and completion badges
+        // Completion badges for returning users
         function updateDashboardBadges() {
             const completed = {
                 calculator: !!localStorage.getItem('calculatorResults'),
@@ -313,24 +478,14 @@
                 tracker: !!localStorage.getItem('habits')
             };
 
-            // Apply completion badges
             Object.entries(completed).forEach(([key, done]) => {
                 const card = document.querySelector(`a[href="${key}.html"]`);
                 if (card && done) {
                     card.classList.add('completed');
                 }
             });
-
-            // Show "Start Here" if calculator not completed
-            if (!completed.calculator) {
-                const calculatorCard = document.querySelector('a[href="calculator.html"]');
-                if (calculatorCard) {
-                    calculatorCard.classList.add('start-here');
-                }
-            }
         }
 
-        // Run on DOM load
         document.addEventListener('DOMContentLoaded', updateDashboardBadges);
     </script>
 </body>
