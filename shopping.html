@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nutrient-Dense Kitchen</title>
     <style>
-        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        /* Skip link styles */
+        .skip-link { position: absolute; top: -40px; left: 0; background: var(--accent); color: white; padding: 8px 16px; z-index: 10000; text-decoration: none; font-weight: 600; border-radius: 0 0 8px 0; }
+        .skip-link:focus { top: 0; }
+        /* Focus indicators */
+        :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #666; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
         [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
         .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
         [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
@@ -133,10 +138,25 @@
         .shopping-items { background: #fafafa; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 12px; }
         .shopping-item { display: flex; align-items: center; padding: 10px 12px; border-radius: 8px; transition: background 0.2s; gap: 12px; }
         .shopping-item:hover { background: #f0f0f0; }
-        .item-checkbox { width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+        .item-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--card-bg);
+        }
         .item-checkbox:hover { border-color: var(--accent); }
-        .item-checkbox.checked { background: #1a5f5f; border-color: var(--accent); }
-        .item-checkbox.checked::after { content: "✓"; color: white; font-size: 14px; font-weight: bold; }
+        .item-checkbox:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .item-checkbox:checked { background: #1a5f5f; border-color: var(--accent); }
+        .item-checkbox:checked::after { content: "✓"; color: white; font-size: 14px; font-weight: bold; }
         .shopping-item.checked .item-name { text-decoration: line-through; color: var(--text-muted); }
         .item-name { flex: 1; font-size: 14px; color: var(--text); }
         .item-nutrients { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
@@ -151,6 +171,27 @@
         .cross-links { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
         .cross-link { background: var(--card-bg); padding: 10px 16px; border-radius: 10px; text-decoration: none; color: var(--accent); font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .disclaimer { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
 
         @media (max-width: 600px) {
             .meal-grid { grid-template-columns: 1fr; }
@@ -169,7 +210,8 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="container" id="main-content">
         <header>
             <h1>The Nutrient-Dense Kitchen</h1>
             <p>Restaurant-quality meals filtered by skill level and time. Find recipes that match your abilities and schedule.</p>
@@ -293,7 +335,7 @@
                 <div class="actions">
                     <button class="btn btn-secondary" onclick="uncheckAll()">Clear Checks</button>
                     <button class="btn btn-secondary" onclick="window.print()">Print</button>
-                    <button class="btn btn-primary" onclick="copyList()">Copy to Clipboard</button>
+                    <button class="btn btn-primary" onclick="copyList()">Copy Checked Items</button>
                 </div>
             </div>
         </div>
@@ -430,6 +472,45 @@
         let checkedItems = {};
         let shoppingFilter = 'all';
 
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full. Please clear old data.');
+                } else {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function init() {
             loadChecked();
             renderMealTypeTabs();
@@ -441,12 +522,11 @@
         }
 
         function loadChecked() {
-            const stored = localStorage.getItem('shopping_checked');
-            if (stored) checkedItems = JSON.parse(stored);
+            checkedItems = safeGetItem('shopping_checked', {});
         }
 
         function saveChecked() {
-            localStorage.setItem('shopping_checked', JSON.stringify(checkedItems));
+            safeSetItem('shopping_checked', checkedItems);
         }
 
         function showTab(tabId) {
@@ -639,13 +719,20 @@
                     <div class="shopping-section">
                         <div class="section-header">${cat.name}<span class="section-count">${checkedCount}/${catFoods.length}</span></div>
                         <div class="shopping-items">
-                            ${catFoods.map(f => `
+                            ${catFoods.map(f => {
+                                const itemId = f.name.replace(/\\s/g, '-').toLowerCase();
+                                return `
                                 <div class="shopping-item ${checkedItems[f.name] ? 'checked' : ''}">
-                                    <div class="item-checkbox ${checkedItems[f.name] ? 'checked' : ''}" onclick="toggleItem('${f.name}')"></div>
-                                    <span class="item-name">${f.name}</span>
+                                    <input type="checkbox"
+                                           class="item-checkbox"
+                                           id="item-${itemId}"
+                                           ${checkedItems[f.name] ? 'checked' : ''}
+                                           onchange="toggleItem('${f.name}')"
+                                           aria-label="${f.name}">
+                                    <label for="item-${itemId}" class="item-name">${f.name}</label>
                                     <div class="item-nutrients">${f.nutrients.slice(0, 3).map(n => `<span class="item-nutrient">${n}</span>`).join('')}</div>
                                 </div>
-                            `).join('')}
+                            `}).join('')}
                         </div>
                     </div>
                 `;
@@ -653,35 +740,46 @@
         }
 
         function toggleItem(name) { checkedItems[name] = !checkedItems[name]; saveChecked(); renderShoppingList(); }
-        function uncheckAll() { checkedItems = {}; saveChecked(); renderShoppingList(); }
+        function uncheckAll() { checkedItems = {}; saveChecked(); renderShoppingList(); showToast('All items unchecked'); }
         function copyList() {
-            const unchecked = foods.filter(f => !checkedItems[f.name]);
+            const checked = foods.filter(f => checkedItems[f.name]);
+
+            if (checked.length === 0) {
+                showToast('No items checked. Select items first.');
+                return;
+            }
+
             const grouped = {};
-            unchecked.forEach(f => { const cat = categories[f.category].name; if (!grouped[cat]) grouped[cat] = []; grouped[cat].push(f.name); });
+            checked.forEach(f => { const cat = categories[f.category].name; if (!grouped[cat]) grouped[cat] = []; grouped[cat].push(f.name); });
             let text = 'SHOPPING LIST\n\n';
-            Object.entries(grouped).forEach(([cat, items]) => { text += `${cat}\n`; items.forEach(item => text += `☐ ${item}\n`); text += '\n'; });
-            navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+            Object.entries(grouped).forEach(([cat, items]) => { text += `${cat}\n`; items.forEach(item => text += `✓ ${item}\n`); text += '\n'; });
+
+            navigator.clipboard.writeText(text)
+                .then(() => showToast(`${checked.length} items copied to clipboard!`))
+                .catch(() => showToast('Copy failed. Please select and copy manually.'));
         }
 
         init();
     </script>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();

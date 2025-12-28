@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bloodwork Reference & Log</title>
     <style>
-        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        /* Skip link styles */
+        .skip-link { position: absolute; top: -40px; left: 0; background: var(--accent); color: white; padding: 8px 16px; z-index: 10000; text-decoration: none; font-weight: 600; border-radius: 0 0 8px 0; }
+        .skip-link:focus { top: 0; }
+        /* Focus indicators */
+        :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #666; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
         [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
         .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
         [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
@@ -535,10 +540,47 @@
         .tips-list li {
             margin-bottom: 4px;
         }
+
+        /* Form hints for accessibility */
+        .hint {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-style: italic;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .form-group input:focus-visible,
+        .form-group select:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="container" id="main-content">
         <header>
             <h1>Bloodwork Reference & Log</h1>
             <p>Track your markers. Understand optimal vs "normal."</p>
@@ -599,12 +641,14 @@
                 <div class="log-form">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Test Date</label>
-                            <input type="date" id="testDate">
+                            <label for="testDate">Test Date</label>
+                            <input type="date" id="testDate" aria-describedby="testDate-hint">
+                            <span id="testDate-hint" class="hint">Date when bloodwork was drawn</span>
                         </div>
                         <div class="form-group">
-                            <label>Lab / Provider</label>
-                            <input type="text" id="labName" placeholder="Quest, LabCorp, etc.">
+                            <label for="labName">Lab / Provider</label>
+                            <input type="text" id="labName" placeholder="Quest, LabCorp, etc." aria-describedby="labName-hint">
+                            <span id="labName-hint" class="hint">Optional: Lab where test was performed</span>
                         </div>
                     </div>
                     
@@ -669,7 +713,46 @@
         let selectedMarkers = [];
         let logs = [];
         let activeFilter = 'all';
-        
+
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    showToast('Storage full. Please clear old data.');
+                } else {
+                    console.error(`Failed to save ${key}:`, e);
+                }
+                return false;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function init() {
             loadLogs();
             renderMarkerSelect();
@@ -678,14 +761,13 @@
             renderTrendCharts();
             document.getElementById('testDate').valueAsDate = new Date();
         }
-        
+
         function loadLogs() {
-            const stored = localStorage.getItem('bloodwork_logs');
-            if (stored) logs = JSON.parse(stored);
+            logs = safeGetItem('bloodwork_logs', []);
         }
-        
+
         function saveLogs() {
-            localStorage.setItem('bloodwork_logs', JSON.stringify(logs));
+            safeSetItem('bloodwork_logs', logs);
         }
         
         function showTab(tabId) {
@@ -717,10 +799,14 @@
             const container = document.getElementById('markerInputs');
             if (selectedMarkers.length === 0) { container.innerHTML = ''; return; }
             container.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px;">
                     ${selectedMarkers.map(id => {
                         const m = markers.find(x => x.id === id);
-                        return `<div class="form-group"><label>${m.name}</label><input type="number" step="0.1" id="value_${m.id}" placeholder="${m.unit}"></div>`;
+                        return `<div class="form-group">
+                            <label for="value_${m.id}">${m.name}</label>
+                            <input type="number" step="0.1" id="value_${m.id}" placeholder="${m.unit}" aria-describedby="hint_${m.id}">
+                            <span id="hint_${m.id}" class="hint">Optimal: ${m.optimal[0]}-${m.optimal[1]} ${m.unit}</span>
+                        </div>`;
                     }).join('')}
                 </div>`;
         }
@@ -728,19 +814,19 @@
         function saveLogEntry() {
             const date = document.getElementById('testDate').value;
             const lab = document.getElementById('labName').value;
-            if (!date) { alert('Select a date'); return; }
-            if (selectedMarkers.length === 0) { alert('Select markers'); return; }
+            if (!date) { showToast('Please select a date'); return; }
+            if (selectedMarkers.length === 0) { showToast('Please select at least one marker'); return; }
             const values = {};
             selectedMarkers.forEach(id => {
                 const input = document.getElementById(`value_${id}`);
                 if (input && input.value) values[id] = parseFloat(input.value);
             });
-            if (Object.keys(values).length === 0) { alert('Enter values'); return; }
-            logs.push({ id: Date.now(), date, lab, values });
+            if (Object.keys(values).length === 0) { showToast('Please enter at least one value'); return; }
+            logs.push({ id: Date.now(), date, lab: escapeHtml(lab), values });
             logs.sort((a, b) => new Date(b.date) - new Date(a.date));
             saveLogs();
             clearForm();
-            alert('Saved!');
+            showToast('Results saved successfully!');
             showTab('history');
         }
         
@@ -909,8 +995,8 @@
                         renderHistory();
                         renderMarkerFilter();
                         renderTrendCharts();
-                        alert('Imported!');
-                    } catch (err) { alert('Invalid file'); }
+                        showToast('Data imported successfully!');
+                    } catch (err) { showToast('Invalid file format'); }
                 };
                 reader.readAsText(e.target.files[0]);
             };
@@ -930,22 +1016,24 @@
         init();
     </script>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();

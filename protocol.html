@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Personalized Protocol</title>
     <style>
-        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        /* Skip link styles */
+        .skip-link { position: absolute; top: -40px; left: 0; background: var(--accent); color: white; padding: 8px 16px; z-index: 10000; text-decoration: none; font-weight: 600; border-radius: 0 0 8px 0; }
+        .skip-link:focus { top: 0; }
+        /* Focus indicators */
+        :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #666; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
         [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
         .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
         [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
@@ -105,6 +110,36 @@
         .btn-outline { background: var(--card-bg); border: 2px solid #1a5f5f; color: var(--accent); }
         .disclaimer { margin-top: 24px; padding: 16px; background: #f8f8f8; border-radius: 10px; font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.5; }
         .section-intro { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+
+        /* Safety Warning */
+        .warning-box { background: #fde8e8; border: 2px solid #e74c3c; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .warning-box strong { color: #c0392b; }
+        .warning-box ul { margin: 10px 0 0 20px; font-size: 13px; color: #721c24; line-height: 1.6; }
+        .warning-box li { margin-bottom: 8px; }
+        .warning-box li:last-child { margin-bottom: 0; }
+        .warning-box p { font-size: 13px; color: #721c24; line-height: 1.6; margin-top: 8px; }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         @media print {
             body { background: var(--card-bg); padding: 0; font-size: 11pt; }
             .no-print { display: none !important; }
@@ -116,13 +151,24 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="container" id="main-content">
         <header class="no-print">
             <h1>Protocol Generator</h1>
             <p>Your personalized action plan based on your data</p>
             <a href="index.html" class="nav-link">← Back to Dashboard</a>
         </header>
-        
+
+        <div class="warning-box no-print" role="alert">
+            <strong>⚠️ Important Safety Considerations:</strong>
+            <ul>
+                <li><strong>Iron supplementation:</strong> Men and post-menopausal women should test ferritin levels first. Iron overload (hemochromatosis) affects 1 in 200 people of Northern European descent and can cause serious organ damage.</li>
+                <li><strong>Potassium supplementation:</strong> People with kidney disease or taking certain blood pressure medications should avoid potassium supplements without medical supervision.</li>
+                <li><strong>High-dose vitamins:</strong> Fat-soluble vitamins (A, D, E, K) can accumulate in the body. Always test levels before supplementing at high doses.</li>
+            </ul>
+            <p><strong>Remember:</strong> This tool provides educational information only. Always consult your healthcare provider before starting any supplement regimen.</p>
+        </div>
+
         <div id="collector" class="no-print">
             <div class="card">
                 <h2>Your Data Sources</h2>
@@ -176,6 +222,31 @@
 
         let data = { calculator: null, symptoms: null, bloodwork: null, habits: null, medications: null };
 
+        // Utility functions
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function safeGetItem(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (e) {
+                console.error(`Failed to load ${key}:`, e);
+                return defaultValue;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function init() {
             loadAllData();
             renderDataSources();
@@ -183,20 +254,16 @@
         }
 
         function loadAllData() {
-            const calc = localStorage.getItem('calculator_results');
-            if (calc) data.calculator = JSON.parse(calc);
-            
-            const symp = localStorage.getItem('symptom_results');
-            if (symp) data.symptoms = JSON.parse(symp);
-            
-            const blood = localStorage.getItem('bloodwork_logs');
-            if (blood) { const logs = JSON.parse(blood); if (logs.length > 0) data.bloodwork = logs; }
-            
-            const habits = localStorage.getItem('subtraction_habits');
-            if (habits) { const h = JSON.parse(habits); if (Object.keys(h).length > 0) data.habits = h; }
-            
-            const meds = localStorage.getItem('medication_results');
-            if (meds) data.medications = JSON.parse(meds);
+            data.calculator = safeGetItem('calculator_results', null);
+            data.symptoms = safeGetItem('symptom_results', null);
+
+            const blood = safeGetItem('bloodwork_logs', []);
+            if (blood && blood.length > 0) data.bloodwork = blood;
+
+            const habits = safeGetItem('subtraction_habits', {});
+            if (habits && Object.keys(habits).length > 0) data.habits = habits;
+
+            data.medications = safeGetItem('medication_results', null);
         }
 
         function renderDataSources() {
@@ -528,22 +595,24 @@
         init();
     </script>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><span aria-hidden="true">🌙</span></button>
     <script>
         function toggleTheme() {
             const html = document.documentElement;
             const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+            document.querySelector('.theme-toggle span').textContent = next === 'dark' ? '☀️' : '🌙';
         }
         (function() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 document.addEventListener('DOMContentLoaded', () => {
-                    const btn = document.querySelector('.theme-toggle');
-                    if (btn) btn.textContent = '☀️';
+                    const span = document.querySelector('.theme-toggle span');
+                    if (span) span.textContent = '☀️';
                 });
             }
         })();
