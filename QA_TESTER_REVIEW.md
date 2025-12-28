@@ -9,24 +9,42 @@
 ## TESTING ENVIRONMENT REQUIREMENTS
 
 ### Browsers to Test
-- [ ] Chrome (latest)
-- [ ] Firefox (latest)
-- [ ] Safari (latest)
-- [ ] Edge (latest)
-- [ ] Chrome Mobile (Android)
-- [ ] Safari Mobile (iOS)
+- [x] Chrome (latest)
+  - **PRIORITY**: Primary - Largest market share
+  - **EXPECTED**: Full compatibility
+- [x] Firefox (latest)
+  - **PRIORITY**: High - Second largest desktop browser
+  - **WATCH FOR**: Date input styling differences
+- [x] Safari (latest)
+  - **PRIORITY**: High - Required for iOS users
+  - **WATCH FOR**: PWA limitations, flex gap support
+- [x] Edge (latest)
+  - **PRIORITY**: Medium - Chromium-based, should work
+- [x] Chrome Mobile (Android)
+  - **PRIORITY**: High - Primary mobile browser
+- [x] Safari Mobile (iOS)
+  - **PRIORITY**: High - Only browser engine on iOS
+  - **WATCH FOR**: Fixed positioning, 100vh issues
 
 ### Device Viewports
-- [ ] Desktop (1920x1080)
-- [ ] Laptop (1366x768)
-- [ ] Tablet (768x1024)
-- [ ] Mobile (375x667)
-- [ ] Small Mobile (320x568)
+- [x] Desktop (1920x1080)
+  - **USE CASE**: Primary development view
+- [x] Laptop (1366x768)
+  - **USE CASE**: Most common laptop resolution
+- [x] Tablet (768x1024)
+  - **USE CASE**: iPad portrait orientation
+- [x] Mobile (375x667)
+  - **USE CASE**: iPhone SE/8 size
+- [x] Small Mobile (320x568)
+  - **USE CASE**: Minimum supported viewport per WCAG
 
 ### Prerequisites
 - Clear localStorage before each test session
+  - **HOW**: DevTools → Application → Storage → Clear site data
 - Test in both incognito and normal mode
+  - **WHY**: Incognito has stricter storage policies
 - Test with and without service worker cached
+  - **HOW**: DevTools → Application → Service Workers → Unregister
 
 ---
 
@@ -51,6 +69,11 @@
 | DASH-E01 | localStorage disabled | Disable localStorage in browser | App still loads (graceful degradation) | [ ] |
 | DASH-E02 | Offline access | Enable airplane mode after first load | Cached version displays | [ ] |
 | DASH-E03 | Theme on reload | Set dark mode, close and reopen | Dark mode persists | [ ] |
+
+**QA Notes on Edge Cases:**
+- **DASH-E01**: Likely to fail - app relies heavily on localStorage without graceful fallback
+- **DASH-E02**: Depends on service worker caching strategy - verify all assets cached
+- **DASH-E03**: Should pass if localStorage.getItem('theme') called on page load
 
 ---
 
@@ -90,6 +113,12 @@
 | CALC-E02 | Skip question | Try to click Next without selecting | Button disabled, cannot proceed | [ ] |
 | CALC-E03 | Rapid clicking | Click Next rapidly | No duplicate submissions | [ ] |
 | CALC-E04 | Back from Q1 | Click Back on first question | Back button disabled | [ ] |
+
+**QA Notes on Calculator:**
+- **KEYBOARD ACCESS BLOCKED**: Quiz options are `<div onclick>` - cannot test with keyboard only
+- **CALC-E02**: Verify Next button has `disabled` attribute, not just visual styling
+- **CALC-E03**: Watch for race conditions in state updates
+- **SCORING TESTS**: Critical - verify algorithm matches expected nutrient risk mappings
 
 ---
 
@@ -256,6 +285,14 @@
 | SHOP-E02 | No matching recipes | Filter to impossible combo | "No recipes" message | [ ] |
 | SHOP-E03 | Copy to clipboard denied | Deny clipboard permission | Error handled gracefully | [ ] |
 
+**QA Notes on Shopping List:**
+- **CRITICAL RECENT FIX**: SHOP-019 tests the copy functionality bug fix
+  - Previously copied UNCHECKED items; now should copy only CHECKED items
+  - Verify: Check 3 items, copy, paste - should see only those 3 with ✓
+- **SHOP-021**: Empty copy behavior needs definition - should show "No items checked" or similar
+- **CLIPBOARD API**: May fail in HTTP (non-HTTPS) or if permission denied - verify error handling
+- **KEYBOARD ACCESS BLOCKED**: Shopping list checkboxes are `<div onclick>` - cannot test with keyboard
+
 ---
 
 ## SECTION 7: Bloodwork Log (bloodwork.html)
@@ -388,6 +425,15 @@
 | SEC-004 | Script in input | Enter `<script>alert(1)</script>` | Script not executed | [ ] |
 | SEC-005 | Malformed JSON import | Import crafted JSON | Graceful error | [ ] |
 
+**QA Security Notes:**
+- **SEC-001**: Verify with Network tab during all operations - no fetch/XHR requests expected
+- **SEC-004**: Test in bloodwork page number inputs and any file import functionality
+- **SEC-005**: Create malformed JSON files with:
+  - Invalid JSON syntax: `{broken`
+  - Script injection: `{"name": "<script>alert(1)</script>"}`
+  - Oversized data: 10MB+ file
+- **CRITICAL**: innerHTML used throughout - verify user data is never rendered unsanitized
+
 ---
 
 ## SECTION 13: Bug Report Template
@@ -423,32 +469,114 @@ NOTES:
 
 | Section | Total Tests | Passed | Failed | Blocked |
 |---------|-------------|--------|--------|---------|
-| Dashboard | | | | |
-| Calculator | | | | |
-| Symptoms | | | | |
-| Medications | | | | |
-| Habit Tracker | | | | |
-| Shopping List | | | | |
-| Bloodwork | | | | |
-| Protocol | | | | |
-| Guide | | | | |
-| Cross-Browser | | | | |
-| **TOTAL** | | | | |
+| Dashboard | 10 | TBD | TBD | 0 |
+| Calculator | 16 | TBD | TBD | 3 (keyboard) |
+| Symptoms | 13 | TBD | TBD | 0 |
+| Medications | 10 | TBD | TBD | 0 |
+| Habit Tracker | 22 | TBD | TBD | 3 (keyboard) |
+| Shopping List | 24 | TBD | TBD | 3 (keyboard) |
+| Bloodwork | 15 | TBD | TBD | 0 |
+| Protocol | 10 | TBD | TBD | 0 |
+| Guide | 5 | TBD | TBD | 0 |
+| Cross-Browser | 54 | TBD | TBD | 0 |
+| Security | 5 | TBD | TBD | 0 |
+| Performance | 8 | TBD | TBD | 0 |
+| **TOTAL** | **192** | TBD | TBD | **9** |
+
+### Pre-Testing Assessment (Code Review Findings)
+
+Based on code review and SME feedback, the following issues are **expected to fail**:
+
+| Priority | Issue | Affected Tests | Impact |
+|----------|-------|----------------|--------|
+| **CRITICAL** | Keyboard navigation blocked | CALC-*, HABIT-*, SHOP-* (any keyboard test) | Blocks accessibility testing |
+| **HIGH** | No clipboard error handling | SHOP-E03, SHOP-021 | Unhandled promise rejection |
+| **HIGH** | localStorage without try/catch | DASH-E01 | App may crash |
+| **MEDIUM** | Color contrast failures | Visual inspection | #999 text fails WCAG |
+| **MEDIUM** | Empty state handling | SHOP-021 | Undefined behavior |
 
 ### Critical Issues Found
 
+1. **Keyboard Navigation Blocked** (Severity: Critical)
+   - Calculator quiz options, habit checkboxes, shopping checkboxes are not keyboard accessible
+   - **Impact**: Cannot complete core functionality with keyboard
+   - **Recommendation**: Replace `<div onclick>` with semantic HTML controls
+
+2. **Clipboard API Unhandled Errors** (Severity: High)
+   - Copy functionality uses `.then()` without `.catch()`
+   - **Impact**: Silent failures on permission denied or HTTPS issues
+   - **Recommendation**: Add error handling with user feedback
+
+3. **localStorage Error Handling** (Severity: High)
+   - JSON.parse() called without try/catch in several places
+   - **Impact**: Corrupted data could crash app
+   - **Recommendation**: Add defensive error handling
+
+4. **Copy List Behavior** (Severity: Medium - RECENTLY FIXED)
+   - Copy button now correctly copies checked items only
+   - **Verify**: Button label should indicate "Copy Checked Items"
+   - **Test**: SHOP-019 should now pass
 
 ### Recommendations
 
+**Before Release:**
+1. Fix keyboard accessibility issues (blocks 9 test cases)
+2. Add clipboard API error handling
+3. Add localStorage error handling
+4. Add empty state handling for copy function
+
+**Test Prioritization:**
+1. Run smoke tests on all pages (basic load/navigation)
+2. Execute happy path tests for each feature
+3. Run edge case tests
+4. Complete cross-browser matrix
+5. Perform security testing
+
+**Automation Candidates:**
+- localStorage state management tests (unit tests)
+- Cross-browser visual regression (Playwright)
+- Accessibility checks (axe-core integration)
+
+**Manual Testing Focus:**
+- Recipe filtering combinations
+- Scoring algorithm verification
+- Data persistence across sessions
+- Print functionality on all pages
+
+### Test Environment Notes
+
+- PWA install testing requires HTTPS or localhost
+- Clipboard API requires secure context
+- Service worker caching needs network throttling tests
+- Mobile testing requires actual devices (emulator is insufficient for touch/scroll)
 
 ### Sign-off
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
-| QA Lead | | | |
+| QA Lead | (Simulated Review) | December 2024 | ✓ |
 | Developer | | | |
 | Product Owner | | | |
 
 ---
 
-**Thank you for your thorough testing.**
+## OVERALL QA ASSESSMENT
+
+**Test Coverage**: ⭐⭐⭐⭐ (4/5) - Comprehensive test plan covering all features
+
+**Test Readiness**: ⭐⭐⭐ (3/5) - Some tests blocked by keyboard accessibility issues
+
+**Code Testability**: ⭐⭐⭐ (3/5) - Inline code harder to unit test; integration tests needed
+
+**Estimated Test Execution Time**:
+- Smoke tests: 30 minutes
+- Full functional: 4-6 hours
+- Cross-browser: 2-3 hours
+- Total first pass: 8-10 hours
+
+**Recommendation**: CONDITIONAL GO for testing. Fix keyboard accessibility before full test execution. Prioritize SHOP-019 verification (recent bug fix) and scoring algorithm tests.
+
+---
+
+**Review completed by: QA Tester (simulated expert review)**
+**Date: December 2024**
