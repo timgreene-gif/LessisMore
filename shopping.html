@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrient-Dense Kitchen</title>
+    <style>
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); min-height: 100vh; padding: 12px; }
+        .container { max-width: 950px; margin: 0 auto; }
+        header { background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); color: white; padding: 24px; border-radius: 16px; margin-bottom: 16px; text-align: center; }
+        header h1 { font-size: 24px; margin-bottom: 6px; }
+        header p { opacity: 0.9; font-size: 14px; max-width: 500px; margin: 0 auto; }
+        .nav-link { display: inline-block; margin-top: 12px; color: white; opacity: 0.9; text-decoration: none; font-size: 12px; }
+        .nav-link:hover { opacity: 1; text-decoration: underline; }
+        .tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
+        .tab { flex: 1; min-width: 90px; padding: 12px 14px; background: var(--card-bg); border: none; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); white-space: nowrap; }
+        .tab:hover { background: #e8f4f4; }
+        .tab.active { background: #1a5f5f; color: white; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+        .card h2 { color: var(--accent); font-size: 18px; margin-bottom: 8px; }
+        .card-intro { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+
+        /* Filter/Sort Controls */
+        .controls-bar { background: #f8f8f8; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        .controls-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+        .control-group { display: flex; align-items: center; gap: 8px; }
+        .control-label { font-size: 12px; font-weight: 600; color: #555; }
+        
+        /* Sort Dropdown */
+        .sort-select { padding: 8px 12px; font-size: 12px; border: 2px solid #ddd; border-radius: 8px; background: var(--card-bg); cursor: pointer; font-weight: 500; min-width: 180px; }
+        .sort-select:focus { outline: none; border-color: var(--accent); }
+        
+        /* Filter Chips */
+        .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .filter-chip { padding: 6px 12px; font-size: 11px; background: var(--card-bg); border: 2px solid #ddd; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+        .filter-chip:hover { border-color: var(--accent); }
+        .filter-chip.active { background: #1a5f5f; color: white; border-color: var(--accent); }
+        .filter-chip .icon { font-size: 12px; }
+        
+        /* Skill colors when active */
+        .filter-chip.skill-beginner.active { background: #27ae60; border-color: #27ae60; }
+        .filter-chip.skill-intermediate.active { background: #f39c12; border-color: #f39c12; }
+        .filter-chip.skill-advanced.active { background: #e74c3c; border-color: #e74c3c; }
+        
+        .results-info { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+        .results-count { font-size: 12px; color: #888; }
+        .clear-btn { font-size: 11px; color: #e74c3c; cursor: pointer; text-decoration: underline; background: none; border: none; }
+
+        /* Meal Type Tabs */
+        .meal-type-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+        .meal-type-tab { padding: 10px 16px; background: #f0f0f0; border: none; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); }
+        .meal-type-tab:hover { background: #e0e0e0; }
+        .meal-type-tab.active { background: #1a5f5f; color: white; }
+        .meal-type-tab .count { opacity: 0.7; margin-left: 4px; }
+
+        /* Meal Cards */
+        .meal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .meal-card { background: var(--card-bg); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: all 0.25s; border: 1px solid #eee; display: flex; flex-direction: column; }
+        .meal-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+        .meal-header { padding: 16px 18px 12px; border-bottom: 1px solid #f0f0f0; }
+        .meal-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+        .meal-name { font-weight: 700; color: var(--text); font-size: 16px; line-height: 1.3; flex: 1; }
+        .meal-badges { display: flex; gap: 6px; flex-shrink: 0; }
+        .meal-badge { font-size: 9px; padding: 4px 10px; border-radius: 12px; font-weight: 600; }
+        .meal-badge.beginner { background: #d4edda; color: #155724; }
+        .meal-badge.intermediate { background: #fff3cd; color: #856404; }
+        .meal-badge.advanced { background: #f8d7da; color: #721c24; }
+        .meal-badge.time { background: #e8f4f4; color: var(--accent); }
+        .meal-meta-row { display: flex; gap: 12px; align-items: center; }
+        .meal-cuisine { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600; }
+        .meal-body { padding: 14px 18px; flex: 1; }
+        .meal-description { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 12px; }
+        .meal-section { margin-bottom: 12px; }
+        .meal-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+        .meal-ingredients { font-size: 12px; color: #555; line-height: 1.6; }
+        .meal-footer { padding: 12px 18px; background: #fafafa; border-top: 1px solid #f0f0f0; }
+        .meal-nutrients { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+        .meal-nutrient { font-size: 10px; padding: 4px 10px; background: #e8f4f4; border-radius: 12px; color: var(--accent); font-weight: 600; }
+        .meal-tip { font-size: 11px; color: #4a7c59; line-height: 1.5; padding: 10px 12px; background: #f0f8f0; border-radius: 8px; margin-top: 8px; }
+        .meal-tip::before { content: "💡 "; }
+
+        /* No Results */
+        .no-results { text-align: center; padding: 40px 20px; color: #888; }
+        .no-results h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-secondary); }
+        .no-results p { font-size: 13px; }
+
+        /* Week Plan */
+        .week-intro { background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .week-intro h3 { font-size: 16px; margin-bottom: 8px; }
+        .week-intro p { font-size: 13px; opacity: 0.9; line-height: 1.5; }
+        .week-intro ul { margin-top: 12px; font-size: 12px; opacity: 0.9; padding-left: 20px; }
+        .week-intro li { margin-bottom: 4px; }
+        .day-card { background: var(--card-bg); border-radius: 14px; margin-bottom: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+        .day-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: linear-gradient(135deg, #f8f8f8, #fff); border-bottom: 1px solid #eee; }
+        .day-name { font-weight: 700; font-size: 18px; color: var(--accent); }
+        .day-theme { font-size: 11px; color: #888; background: #f0f0f0; padding: 5px 12px; border-radius: 15px; }
+        .day-meals { padding: 16px 20px; }
+        .day-meal { display: grid; grid-template-columns: 80px 1fr auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f5f5f5; align-items: start; }
+        .day-meal:last-child { border-bottom: none; }
+        .day-meal-type { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; padding-top: 2px; }
+        .day-meal-content h4 { font-size: 14px; color: var(--text); margin-bottom: 3px; font-weight: 600; }
+        .day-meal-content p { font-size: 12px; color: #888; line-height: 1.4; }
+        .day-meal-nutrients { text-align: right; }
+        .day-meal-nutrients span { display: inline-block; font-size: 9px; padding: 3px 7px; background: #e8f4f4; border-radius: 8px; color: var(--accent); font-weight: 600; margin: 1px; }
+        .prep-note { background: #fffbf0; border: 1px solid #f0e6cc; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 12px; color: #8a7a55; }
+        .prep-note strong { color: #6b5d35; }
+
+        /* Power Foods */
+        .power-foods { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .power-food { background: #f8f8f8; border-radius: 12px; padding: 14px; border-left: 4px solid #1a5f5f; }
+        .power-food.tier1 { border-left-color: #e85a4f; background: #fef8f8; }
+        .power-food.tier2 { border-left-color: #f0ad4e; background: #fffbf5; }
+        .power-food.tier3 { border-left-color: #4a7c59; background: #f5faf5; }
+        .food-name { font-weight: 700; color: var(--text); font-size: 14px; margin-bottom: 6px; }
+        .food-nutrients { display: flex; flex-wrap: wrap; gap: 4px; }
+        .nutrient-tag { font-size: 9px; padding: 2px 6px; background: var(--card-bg); border-radius: 10px; color: var(--text-secondary); border: 1px solid var(--border); }
+        .nutrient-count { font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 6px; }
+        .tier-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .tier-header h3 { font-size: 15px; color: var(--text); }
+
+        /* Shopping List */
+        .shopping-filter-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .shopping-section { margin-bottom: 20px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; background: #1a5f5f; color: white; padding: 12px 16px; border-radius: 10px 10px 0 0; font-weight: 600; font-size: 14px; }
+        .section-count { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 12px; font-size: 12px; }
+        .shopping-items { background: #fafafa; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 12px; }
+        .shopping-item { display: flex; align-items: center; padding: 10px 12px; border-radius: 8px; transition: background 0.2s; gap: 12px; }
+        .shopping-item:hover { background: #f0f0f0; }
+        .item-checkbox { width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+        .item-checkbox:hover { border-color: var(--accent); }
+        .item-checkbox.checked { background: #1a5f5f; border-color: var(--accent); }
+        .item-checkbox.checked::after { content: "✓"; color: white; font-size: 14px; font-weight: bold; }
+        .shopping-item.checked .item-name { text-decoration: line-through; color: var(--text-muted); }
+        .item-name { flex: 1; font-size: 14px; color: var(--text); }
+        .item-nutrients { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+        .item-nutrient { font-size: 9px; padding: 3px 7px; background: #e8f4f4; border-radius: 10px; color: var(--accent); font-weight: 600; }
+
+        .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-primary { background: #1a5f5f; color: white; }
+        .btn-primary:hover { background: #155050; }
+        .btn-secondary { background: #f0f0f0; color: var(--text-secondary); }
+        .btn-secondary:hover { background: #e5e5e5; }
+        .cross-links { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .cross-link { background: var(--card-bg); padding: 10px 16px; border-radius: 10px; text-decoration: none; color: var(--accent); font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .disclaimer { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 20px; }
+
+        @media (max-width: 600px) {
+            .meal-grid { grid-template-columns: 1fr; }
+            .controls-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .results-info { margin-left: 0; margin-top: 8px; width: 100%; justify-content: space-between; }
+            .day-meal { grid-template-columns: 70px 1fr; }
+            .day-meal-nutrients { grid-column: 1 / -1; text-align: left; margin-top: 6px; }
+        }
+
+        @media print {
+            body { background: var(--card-bg); padding: 0; }
+            header, .tabs, .controls-bar, .meal-type-tabs, .actions, .cross-links, .nav-link { display: none; }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            .meal-card { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>The Nutrient-Dense Kitchen</h1>
+            <p>Restaurant-quality meals filtered by skill level and time. Find recipes that match your abilities and schedule.</p>
+            <a href="index.html" class="nav-link">← Back to Dashboard</a>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('meals')">Recipe Collection</button>
+            <button class="tab" onclick="showTab('weekplan')">7-Day Meal Plan</button>
+            <button class="tab" onclick="showTab('power')">Power Foods</button>
+            <button class="tab" onclick="showTab('list')">Shopping List</button>
+        </div>
+        
+        <!-- Recipe Collection -->
+        <div id="meals" class="panel active">
+            <div class="card">
+                <h2>Recipe Collection</h2>
+                <p class="card-intro">32 chef-quality recipes. Sort by skill or time, filter to find exactly what you need.</p>
+                
+                <div class="controls-bar">
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <span class="control-label">Sort by:</span>
+                            <select class="sort-select" id="sortSelect" onchange="applySort()">
+                                <option value="skill-asc">Skill: Easiest First</option>
+                                <option value="skill-desc">Skill: Hardest First</option>
+                                <option value="time-asc">Time: Fastest First</option>
+                                <option value="time-desc">Time: Longest First</option>
+                                <option value="name-asc">Name: A-Z</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <span class="control-label">Filter:</span>
+                            <div class="filter-chips">
+                                <button class="filter-chip skill-beginner active" onclick="toggleFilter('skill', 'beginner')">
+                                    <span class="icon">🟢</span> Beginner
+                                </button>
+                                <button class="filter-chip skill-intermediate active" onclick="toggleFilter('skill', 'intermediate')">
+                                    <span class="icon">🟡</span> Intermediate
+                                </button>
+                                <button class="filter-chip skill-advanced active" onclick="toggleFilter('skill', 'advanced')">
+                                    <span class="icon">🔴</span> Advanced
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="results-info">
+                            <span class="results-count" id="resultsCount">32 recipes</span>
+                            <button class="clear-btn" onclick="resetFilters()">Reset All</button>
+                        </div>
+                    </div>
+                    
+                    <div class="controls-row" style="margin-top: 12px;">
+                        <div class="control-group">
+                            <span class="control-label">Time:</span>
+                            <div class="filter-chips">
+                                <button class="filter-chip time-quick active" onclick="toggleFilter('time', 'quick')">
+                                    ⚡ Under 15 min
+                                </button>
+                                <button class="filter-chip time-medium active" onclick="toggleFilter('time', 'medium')">
+                                    🕐 15-30 min
+                                </button>
+                                <button class="filter-chip time-long active" onclick="toggleFilter('time', 'long')">
+                                    🍲 30+ min
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="meal-type-tabs" id="mealTypeTabs"></div>
+                
+                <div class="meal-grid" id="mealGrid"></div>
+                <div class="no-results" id="noResults" style="display: none;">
+                    <h3>No recipes match your filters</h3>
+                    <p>Try selecting more skill levels or time ranges above.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 7-Day Meal Plan -->
+        <div id="weekplan" class="panel">
+            <div class="card">
+                <h2>Your 7-Day Blueprint</h2>
+                <div class="week-intro">
+                    <h3>How This Plan Works</h3>
+                    <p>Designed around real-life cooking with strategic prep and smart leftovers:</p>
+                    <ul>
+                        <li><strong>Sunday:</strong> Prep day. Make sauces, marinate proteins, prep vegetables.</li>
+                        <li><strong>Monday-Tuesday:</strong> Cook fresh using Sunday's prep.</li>
+                        <li><strong>Wednesday:</strong> Transform leftovers or quick-cook meals.</li>
+                        <li><strong>Thursday-Friday:</strong> Second batch cooking, easy wins.</li>
+                        <li><strong>Weekend:</strong> Enjoy cooking, experiment, reset.</li>
+                    </ul>
+                </div>
+                <div id="weekPlan"></div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="window.print()">Print Meal Plan</button>
+                <button class="btn btn-secondary" onclick="showTab('list')">View Shopping List</button>
+            </div>
+        </div>
+        
+        <!-- Power Foods -->
+        <div id="power" class="panel">
+            <div class="card">
+                <h2>The Power Foods</h2>
+                <p class="card-intro">Build your shopping around these multi-hitters and you're 80% of the way there.</p>
+                <div id="powerFoodsContent"></div>
+            </div>
+        </div>
+        
+        <!-- Shopping List -->
+        <div id="list" class="panel">
+            <div class="card">
+                <h2>Your Shopping List</h2>
+                <p class="card-intro">Check items as you shop. Progress saves automatically.</p>
+                <div class="shopping-filter-bar" id="shoppingFilterBar"></div>
+                <div id="shoppingList"></div>
+                <div class="actions">
+                    <button class="btn btn-secondary" onclick="uncheckAll()">Clear Checks</button>
+                    <button class="btn btn-secondary" onclick="window.print()">Print</button>
+                    <button class="btn btn-primary" onclick="copyList()">Copy to Clipboard</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cross-links">
+            <a href="protocol.html" class="cross-link">📋 My Protocol</a>
+            <a href="tracker.html" class="cross-link">✓ Habit Tracker</a>
+            <a href="bloodwork.html" class="cross-link">🔬 Bloodwork</a>
+        </div>
+        
+        <p class="disclaimer">Real food first. Supplements are Plan B.</p>
+    </div>
+
+    <script>
+        const meals = [
+            // BREAKFAST
+            { type: 'breakfast', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 5, name: 'Greek Yogurt Power Bowl', cuisine: 'Mediterranean', description: 'Full-fat Greek yogurt with toasted walnuts, berries, raw honey, and cinnamon. Five minutes to nutrient-dense perfection.', ingredients: 'Greek yogurt, walnuts, mixed berries, raw honey, cinnamon, chia seeds', nutrients: ['Calcium', 'B12', 'Omega-3', 'Probiotics', 'Vit C'], tip: 'Full-fat is non-negotiable. The richness keeps you full for hours.' },
+            { type: 'breakfast', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 10, name: 'Avocado Toast with Jammy Eggs', cuisine: 'Australian', description: 'Smashed avocado on sourdough with 7-minute jammy eggs, everything seasoning, and good olive oil.', ingredients: 'Ripe avocado, 2 eggs, sourdough, everything seasoning, flaky salt, olive oil, lemon', nutrients: ['Potassium', 'Folate', 'Vit E', 'Choline'], tip: 'Jammy eggs: 7 minutes exactly, then straight to ice bath.' },
+            { type: 'breakfast', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 10, name: 'Overnight Oats with Dark Chocolate', cuisine: 'Modern', description: 'Creamy oats soaked overnight with Greek yogurt, topped with dark chocolate shavings and banana.', ingredients: '½ cup oats, Greek yogurt, milk, almond butter, dark chocolate, banana, honey', nutrients: ['Magnesium', 'Fiber', 'Calcium', 'B12'], tip: 'Make 3-4 jars on Sunday. Grab-and-go all week.' },
+            { type: 'breakfast', skill: 'beginner', skillOrder: 1, time: 'medium', timeMin: 15, name: 'Scrambled Eggs with Smoked Salmon', cuisine: 'Scandinavian', description: 'Soft, creamy scrambled eggs topped with cold-smoked salmon, crème fraîche, and fresh dill.', ingredients: '3 eggs, 2oz smoked salmon, butter, crème fraîche, fresh dill, black pepper', nutrients: ['Omega-3', 'B12', 'Choline', 'Vit D'], tip: 'Low heat, constant stirring. Remove while still slightly wet.' },
+            { type: 'breakfast', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 25, name: 'Shakshuka with Feta & Herbs', cuisine: 'North African', description: 'Eggs poached in smoky spiced tomato sauce with crumbled feta and fresh herbs. Serve with warm pita.', ingredients: 'San Marzano tomatoes, 4 eggs, feta, garlic, cumin, smoked paprika, harissa, cilantro, pita', nutrients: ['Iron', 'Vit C', 'Vit A', 'B12', 'Calcium'], tip: 'Create wells before adding eggs. Cover until whites set, yolks stay runny.' },
+            { type: 'breakfast', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 25, name: 'Sweet Potato Rösti with Herb Yogurt', cuisine: 'Swiss-Inspired', description: 'Crispy shredded sweet potato cakes topped with fried eggs and dill-garlic yogurt.', ingredients: 'Sweet potato, 3 eggs, Greek yogurt, dill, chives, garlic, olive oil, butter, lemon zest', nutrients: ['Vit A', 'Potassium', 'B6', 'Choline', 'Calcium'], tip: 'Squeeze shredded sweet potato dry—essential for crispy rösti.' },
+            { type: 'breakfast', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 25, name: 'Huevos Rancheros', cuisine: 'Mexican', description: 'Crispy tortillas with runny eggs, smoky ranchero sauce, black beans, avocado, and cotija.', ingredients: 'Corn tortillas, 4 eggs, black beans, fire-roasted tomatoes, chipotle, avocado, cotija, cilantro', nutrients: ['Iron', 'Folate', 'Potassium', 'Vit C', 'Fiber'], tip: 'Fry tortillas until just crisp but still pliable.' },
+            { type: 'breakfast', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 25, name: 'Dutch Baby with Berries', cuisine: 'German-American', description: 'Dramatic puffy oven-baked pancake that deflates into buttery perfection. Topped with berries and mascarpone.', ingredients: '3 eggs, flour, milk, butter, mascarpone, berries, lemon, powdered sugar, vanilla', nutrients: ['Choline', 'Calcium', 'B12', 'Vit C'], tip: 'Preheat skillet with butter at 425°F. Pour batter into hot pan.' },
+            { type: 'breakfast', skill: 'advanced', skillOrder: 3, time: 'medium', timeMin: 30, name: 'Eggs Benedict with Hollandaise', cuisine: 'French-American', description: 'Poached eggs and smoked salmon with lemony hollandaise on toasted English muffins.', ingredients: '4 eggs, smoked salmon, butter, lemon, English muffins, fresh dill, vinegar, cayenne', nutrients: ['Omega-3', 'B12', 'Vit D', 'Choline', 'Selenium'], tip: 'Immersion blender hollandaise: blend warm butter into yolk and lemon. 60 seconds.' },
+            { type: 'breakfast', skill: 'advanced', skillOrder: 3, time: 'long', timeMin: 45, name: 'Japanese Breakfast Salmon', cuisine: 'Japanese', description: 'Salt-cured salmon seared until caramelized, with rice, miso soup, pickles, and soft-boiled egg.', ingredients: 'Salmon, coarse salt, rice, miso paste, silken tofu, wakame, eggs, pickled ginger', nutrients: ['Omega-3', 'B12', 'Vit D', 'Magnesium', 'Iodine'], tip: 'Salt the salmon overnight for concentrated flavor and incredible texture.' },
+            { type: 'breakfast', skill: 'advanced', skillOrder: 3, time: 'medium', timeMin: 30, name: 'Shakshuka with Lamb Merguez', cuisine: 'North African', description: 'Spiced lamb sausage crumbled into smoky tomato sauce with poached eggs and harissa.', ingredients: 'Tomatoes, eggs, lamb merguez, feta, harissa, cumin, paprika, garlic, cilantro, pita', nutrients: ['Iron', 'B12', 'Zinc', 'Vit C', 'Vit A'], tip: 'Brown merguez first, build sauce in rendered fat.' },
+
+            // LUNCH
+            { type: 'lunch', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 10, name: 'Sardine Tartine', cuisine: 'French', description: 'Quality tinned sardines on crusty sourdough with pickled onions, arugula, and whole-grain mustard.', ingredients: 'Sardines in olive oil, sourdough, red onion, red wine vinegar, arugula, mustard, lemon, capers', nutrients: ['Omega-3', 'Calcium', 'B12', 'Vit D', 'Selenium'], tip: 'Splurge on Portuguese or Spanish sardines in olive oil.' },
+            { type: 'lunch', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 15, name: 'Mediterranean Tuna Salad', cuisine: 'Mediterranean', description: 'Olive oil-packed tuna with white beans, cherry tomatoes, cucumber, and lemon-herb dressing.', ingredients: 'Quality tuna in olive oil, white beans, cherry tomatoes, cucumber, red onion, parsley, lemon', nutrients: ['Omega-3', 'B12', 'Protein', 'Fiber', 'Iron'], tip: 'Use tuna packed in olive oil, not water. The fat carries flavor.' },
+            { type: 'lunch', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 15, name: 'Chicken Caesar Lettuce Wraps', cuisine: 'American', description: 'Crisp romaine filled with rotisserie chicken, shaved parmesan, and creamy Caesar dressing.', ingredients: 'Rotisserie chicken, romaine hearts, parmesan, Caesar dressing, lemon, black pepper', nutrients: ['Protein', 'B6', 'Calcium', 'Vit K', 'Vit A'], tip: 'Use crunchy inner romaine leaves as cups.' },
+            { type: 'lunch', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 25, name: 'Thai Larb Lettuce Wraps', cuisine: 'Thai', description: 'Minced chicken with toasted rice powder, lime, fish sauce, and herbs in butter lettuce cups.', ingredients: 'Ground chicken, lime, fish sauce, Thai chilies, shallots, mint, cilantro, toasted rice, lettuce', nutrients: ['B6', 'B12', 'Vit C', 'Zinc', 'Vit K'], tip: 'Toast raw rice until golden, then grind. This gives larb its signature crunch.' },
+            { type: 'lunch', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 30, name: 'Grain Bowl with Miso Salmon', cuisine: 'Japanese-California', description: 'Miso-glazed salmon over farro with avocado, pickled cucumber, edamame, and spicy mayo.', ingredients: 'Salmon, white miso, mirin, farro, avocado, cucumber, rice vinegar, edamame, Kewpie mayo', nutrients: ['Omega-3', 'B12', 'Vit D', 'Magnesium', 'Fiber'], tip: 'Marinate salmon at least 30 minutes. Overnight is even better.' },
+            { type: 'lunch', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 30, name: 'Chicken Shawarma Wrap', cuisine: 'Lebanese', description: 'Spiced chicken thighs with char, wrapped in pita with pickles, tomatoes, and garlic sauce.', ingredients: 'Chicken thighs, cumin, coriander, turmeric, paprika, garlic, lemon, pita, pickles, toum', nutrients: ['B6', 'B12', 'Zinc', 'Selenium', 'Vit C'], tip: 'Broil marinated thighs until edges blacken slightly for authentic char.' },
+            { type: 'lunch', skill: 'intermediate', skillOrder: 2, time: 'long', timeMin: 40, name: 'Tuscan White Bean & Kale Soup', cuisine: 'Italian', description: 'Creamy cannellini beans and kale simmered with parmesan rind. Finished with olive oil and crusty bread.', ingredients: 'Cannellini beans, lacinato kale, parmesan rind, garlic, rosemary, chicken stock, olive oil, bread', nutrients: ['Iron', 'Fiber', 'Vit K', 'Calcium', 'Potassium'], tip: 'Freeze parmesan rinds and drop into soups for silky richness.' },
+            { type: 'lunch', skill: 'advanced', skillOrder: 3, time: 'long', timeMin: 35, name: 'Niçoise Salad with Seared Ahi', cuisine: 'French', description: 'Classic composed salad with rare seared ahi, haricots verts, fingerling potatoes, and Dijon vinaigrette.', ingredients: 'Ahi tuna, haricots verts, fingerling potatoes, eggs, niçoise olives, cherry tomatoes, butter lettuce', nutrients: ['Omega-3', 'B12', 'Selenium', 'Potassium', 'Iron'], tip: 'Screaming hot cast iron, 30 seconds per side. Deep crust, rare center.' },
+            { type: 'lunch', skill: 'advanced', skillOrder: 3, time: 'medium', timeMin: 25, name: 'Vietnamese Shaking Beef', cuisine: 'Vietnamese', description: 'Tender filet cubes flash-seared until caramelized, over watercress with lime-pepper dressing.', ingredients: 'Filet or sirloin, watercress, red onion, garlic, soy sauce, fish sauce, lime, black pepper, butter', nutrients: ['B12', 'Iron', 'Zinc', 'Vit C', 'Vit K'], tip: 'Cut into 1-inch cubes, pat very dry. Cook in batches—no crowding.' },
+            { type: 'lunch', skill: 'advanced', skillOrder: 3, time: 'long', timeMin: 40, name: 'Mediterranean Mezze Spread', cuisine: 'Middle Eastern', description: 'Silky hummus, smoky baba ganoush, tabbouleh, marinated feta, and warm pita.', ingredients: 'Chickpeas, tahini, eggplant, bulgur, parsley, tomatoes, cucumber, feta, olive oil, lemon, pita', nutrients: ['Fiber', 'Iron', 'Folate', 'Magnesium', 'Calcium'], tip: 'Simmer chickpeas with baking soda 15 min for ethereal hummus texture.' },
+
+            // DINNER
+            { type: 'dinner', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 15, name: 'Pan-Seared Salmon with Lemon Butter', cuisine: 'French', description: 'Crispy-skinned salmon with a quick lemon-butter-caper sauce and fresh parsley. 15 minutes, restaurant quality.', ingredients: 'Salmon fillets, butter, lemon, capers, parsley, olive oil, salt, pepper', nutrients: ['Omega-3', 'B12', 'Vit D', 'Selenium', 'B6'], tip: 'Start skin-down in a COLD pan, then turn to medium-high for crisp skin.' },
+            { type: 'dinner', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 15, name: 'Thai Basil Beef', cuisine: 'Thai', description: 'Intensely savory minced beef stir-fried with Thai basil and chilies. Over rice with crispy fried egg.', ingredients: 'Ground beef, Thai basil, Thai chilies, garlic, fish sauce, oyster sauce, soy sauce, sugar, eggs, rice', nutrients: ['B12', 'Iron', 'Zinc', 'B6', 'Choline'], tip: 'Very hot wok, small batches. Sear the beef, don\'t steam it.' },
+            { type: 'dinner', skill: 'beginner', skillOrder: 1, time: 'medium', timeMin: 20, name: 'Shrimp Scampi with Zucchini Noodles', cuisine: 'Italian-American', description: 'Garlicky butter-poached shrimp over spiralized zucchini with white wine, lemon, and parsley.', ingredients: 'Large shrimp, zucchini, garlic, butter, white wine, lemon, red pepper flakes, parsley', nutrients: ['B12', 'Zinc', 'Selenium', 'Vit C', 'Potassium'], tip: 'Salt zucchini noodles and drain 10 minutes. Prevents watery sauce.' },
+            { type: 'dinner', skill: 'beginner', skillOrder: 1, time: 'medium', timeMin: 25, name: 'Sheet Pan Chicken & Vegetables', cuisine: 'American', description: 'Chicken thighs roasted with seasonal vegetables. Minimal prep, maximum flavor, easy cleanup.', ingredients: 'Chicken thighs, broccoli, sweet potato, red onion, olive oil, garlic, lemon, herbs', nutrients: ['B6', 'B12', 'Vit A', 'Vit C', 'Potassium'], tip: 'Use thighs, not breasts. They stay juicy and have more flavor.' },
+            { type: 'dinner', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 25, name: 'Ribeye with Chimichurri', cuisine: 'Argentinian', description: 'Perfectly seared ribeye with bright, herbaceous chimichurri. Served with charred broccolini.', ingredients: 'Ribeye steak, parsley, oregano, garlic, red wine vinegar, red pepper flakes, olive oil, broccolini', nutrients: ['B12', 'Iron', 'Zinc', 'Vit C', 'Vit K'], tip: 'Room temp 30 min before. Rest 8-10 min after. Don\'t cut too early.' },
+            { type: 'dinner', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 30, name: 'Miso-Glazed Cod with Bok Choy', cuisine: 'Japanese', description: 'Silky cod glazed in sweet white miso, broiled until caramelized. Over garlicky bok choy and shiitakes.', ingredients: 'Cod, white miso, mirin, sake, brown sugar, bok choy, shiitake mushrooms, garlic, sesame oil', nutrients: ['B12', 'Omega-3', 'Vit D', 'Calcium', 'Selenium'], tip: 'Marinate overnight for miso to penetrate and create incredible crust.' },
+            { type: 'dinner', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 30, name: 'Lamb Kofta with Tzatziki', cuisine: 'Greek', description: 'Spiced lamb kofta grilled until charred, with cooling tzatziki, warm pita, and za\'atar vegetables.', ingredients: 'Ground lamb, cumin, coriander, cinnamon, Greek yogurt, cucumber, dill, zucchini, bell peppers, pita', nutrients: ['B12', 'Iron', 'Zinc', 'Calcium', 'Vit C'], tip: 'Refrigerate kofta 20 min before grilling. They hold together better.' },
+            { type: 'dinner', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 25, name: 'Shrimp Scampi with Burst Tomatoes', cuisine: 'Italian', description: 'Plump shrimp in garlic, white wine, and butter with burst cherry tomatoes. Crusty bread mandatory.', ingredients: 'Large shrimp, garlic, butter, white wine, cherry tomatoes, red pepper flakes, lemon, parsley, bread', nutrients: ['B12', 'Zinc', 'Selenium', 'Vit C', 'Iodine'], tip: 'Save shells—simmer in butter for shrimp butter that transforms the dish.' },
+            { type: 'dinner', skill: 'advanced', skillOrder: 3, time: 'long', timeMin: 45, name: 'Braised Chicken with Olives & Lemon', cuisine: 'Mediterranean', description: 'Crispy thighs braised with Castelvetrano olives, preserved lemon, artichokes, and white wine.', ingredients: 'Chicken thighs, Castelvetrano olives, preserved lemon, artichokes, white wine, stock, garlic, thyme', nutrients: ['B6', 'B12', 'Zinc', 'Selenium', 'Iron'], tip: 'Brown skin first—renders fat and creates fond that flavors the braise.' },
+            { type: 'dinner', skill: 'advanced', skillOrder: 3, time: 'long', timeMin: 50, name: 'Moroccan Chicken with Saffron', cuisine: 'Moroccan', description: 'Chicken braised with saffron, preserved lemon, green olives, and warm spices. Over fluffy couscous.', ingredients: 'Chicken thighs, preserved lemon, olives, onion, garlic, ginger, saffron, cumin, cinnamon, couscous', nutrients: ['B6', 'B12', 'Iron', 'Magnesium', 'Zinc'], tip: 'Preserved lemons are essential. Make your own or find at specialty stores.' },
+            { type: 'dinner', skill: 'advanced', skillOrder: 3, time: 'medium', timeMin: 25, name: 'Mussels in White Wine & Garlic', cuisine: 'French', description: 'Plump mussels steamed in white wine with obscene garlic, shallots, and butter. Crusty bread for the broth.', ingredients: '2 lbs mussels, dry white wine, shallots, garlic, butter, parsley, cream (optional), crusty bread', nutrients: ['B12', 'Iron', 'Zinc', 'Selenium', 'Omega-3'], tip: 'Discard mussels that don\'t close before, and any that don\'t open after.' },
+            { type: 'dinner', skill: 'advanced', skillOrder: 3, time: 'long', timeMin: 40, name: 'Pork Chops with Cider Pan Sauce', cuisine: 'French-American', description: 'Brined thick-cut pork chops seared to perfection, with silky apple cider and Dijon pan sauce.', ingredients: 'Bone-in pork chops, apple cider, Dijon mustard, shallot, butter, fresh thyme, chicken stock', nutrients: ['B12', 'Zinc', 'Selenium', 'B6', 'Potassium'], tip: 'Brine 1-4 hours. This is the difference between dry and incredibly juicy.' },
+
+            // SNACKS
+            { type: 'snack', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 5, name: 'Greek Yogurt with Walnuts & Honey', cuisine: 'Greek', description: 'Full-fat Greek yogurt with toasted walnuts, raw honey, and cinnamon. Simple, satisfying.', ingredients: 'Greek yogurt, walnuts, raw honey, cinnamon', nutrients: ['Calcium', 'B12', 'Omega-3', 'Probiotics'], tip: 'Full-fat keeps you fuller longer.' },
+            { type: 'snack', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 5, name: 'Smoked Salmon Cucumber Bites', cuisine: 'Scandinavian', description: 'Cucumber rounds topped with cream cheese, smoked salmon, and fresh dill. Elegant, no-cook.', ingredients: 'English cucumber, smoked salmon, cream cheese, fresh dill, capers, lemon zest', nutrients: ['Omega-3', 'B12', 'Vit D', 'Vit K'], tip: 'Score cucumber with fork before slicing—creates texture that holds toppings.' },
+            { type: 'snack', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 10, name: 'Spiced Almonds with Rosemary', cuisine: 'Spanish', description: 'Marcona almonds toasted with rosemary, smoked paprika, and flaky salt. Addictive.', ingredients: 'Marcona almonds, butter, fresh rosemary, smoked paprika, cayenne, flaky salt', nutrients: ['Magnesium', 'Vit E', 'Protein'], tip: 'Toss warm almonds with rosemary while still glistening.' },
+            { type: 'snack', skill: 'beginner', skillOrder: 1, time: 'quick', timeMin: 10, name: 'Edamame with Chili-Garlic Oil', cuisine: 'Asian', description: 'Steamed edamame tossed in fragrant chili-garlic oil with sesame seeds and flaky salt.', ingredients: 'Frozen edamame, garlic, chili flakes, sesame oil, neutral oil, sesame seeds, salt', nutrients: ['Protein', 'Magnesium', 'Folate', 'Fiber'], tip: 'Heat garlic gradually in cold oil—prevents burning, creates sweet flavor.' },
+            { type: 'snack', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 15, name: 'Whipped Feta with Za\'atar', cuisine: 'Greek', description: 'Tangy feta whipped until creamy, drizzled with olive oil and za\'atar. Serve with pita and vegetables.', ingredients: 'Feta cheese, Greek yogurt, olive oil, lemon, garlic, za\'atar, pita, vegetables', nutrients: ['Calcium', 'B12', 'Protein', 'Probiotics'], tip: 'Blend feta with cream until smooth—texture like cream cheese.' },
+            { type: 'snack', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 15, name: 'Prosciutto-Wrapped Dates', cuisine: 'Spanish', description: 'Medjool dates stuffed with goat cheese, wrapped in prosciutto, and broiled until crisp.', ingredients: 'Medjool dates, goat cheese, prosciutto, honey, rosemary', nutrients: ['Potassium', 'Calcium', 'B12', 'Iron'], tip: 'Broil until prosciutto crisps—3-4 minutes. Watch closely, they burn fast.' },
+            { type: 'snack', skill: 'intermediate', skillOrder: 2, time: 'medium', timeMin: 15, name: 'Dark Chocolate Sea Salt Bark', cuisine: 'Modern', description: 'Bittersweet chocolate shards with pistachios, dried apricots, and Maldon salt.', ingredients: '8 oz dark chocolate (70%+), pistachios, dried apricots, flaky sea salt', nutrients: ['Magnesium', 'Iron', 'Zinc', 'Vit E'], tip: 'Temper carefully for bark that snaps cleanly.' },
+            { type: 'snack', skill: 'advanced', skillOrder: 3, time: 'long', timeMin: 45, name: 'Baba Ganoush with Pomegranate', cuisine: 'Lebanese', description: 'Smoky roasted eggplant blended with tahini, topped with pomegranate seeds, mint, and olive oil.', ingredients: 'Eggplant, tahini, lemon, garlic, pomegranate seeds, fresh mint, olive oil, pita', nutrients: ['Fiber', 'Magnesium', 'Potassium', 'Vit C'], tip: 'Char eggplant directly over flame until black. The smoke is essential.' }
+        ];
+
+        const weekPlan = [
+            { day: 'Sunday', theme: 'Prep Day', meals: [
+                { type: 'Breakfast', name: 'Dutch Baby with Berries', nutrients: ['Choline', 'Calcium'] },
+                { type: 'Lunch', name: 'Mediterranean Mezze Spread', nutrients: ['Fiber', 'Iron'] },
+                { type: 'Dinner', name: 'Braised Chicken with Olives', nutrients: ['B12', 'Zinc'] }
+            ], prepNote: 'Make chimichurri, miso-marinate salmon, pickle onions, prep vegetables.' },
+            { day: 'Monday', theme: 'Quick Start', meals: [
+                { type: 'Breakfast', name: 'Avocado Toast with Jammy Eggs', nutrients: ['Potassium', 'Choline'] },
+                { type: 'Lunch', name: 'Sunday\'s Chicken over Greens', nutrients: ['B12', 'Vit K'] },
+                { type: 'Dinner', name: 'Ribeye with Chimichurri', nutrients: ['B12', 'Iron', 'Zinc'] }
+            ] },
+            { day: 'Tuesday', theme: 'Seafood', meals: [
+                { type: 'Breakfast', name: 'Scrambled Eggs with Smoked Salmon', nutrients: ['Omega-3', 'B12'] },
+                { type: 'Lunch', name: 'Sardine Tartine', nutrients: ['Omega-3', 'Calcium'] },
+                { type: 'Dinner', name: 'Miso-Glazed Cod', nutrients: ['Omega-3', 'Vit D'] }
+            ] },
+            { day: 'Wednesday', theme: 'Midweek Reset', meals: [
+                { type: 'Breakfast', name: 'Greek Yogurt Power Bowl', nutrients: ['Calcium', 'B12'] },
+                { type: 'Lunch', name: 'Grain Bowl with Leftover Salmon', nutrients: ['Omega-3', 'Fiber'] },
+                { type: 'Dinner', name: 'Thai Basil Beef', nutrients: ['B12', 'Iron'] }
+            ] },
+            { day: 'Thursday', theme: 'Mediterranean', meals: [
+                { type: 'Breakfast', name: 'Shakshuka with Feta', nutrients: ['Iron', 'Vit C'] },
+                { type: 'Lunch', name: 'Chicken Shawarma Wrap', nutrients: ['B6', 'Zinc'] },
+                { type: 'Dinner', name: 'Lamb Kofta with Tzatziki', nutrients: ['B12', 'Iron'] }
+            ] },
+            { day: 'Friday', theme: 'Date Night', meals: [
+                { type: 'Breakfast', name: 'Sweet Potato Rösti', nutrients: ['Vit A', 'Potassium'] },
+                { type: 'Lunch', name: 'Thai Larb Lettuce Wraps', nutrients: ['B6', 'Vit C'] },
+                { type: 'Dinner', name: 'Mussels in White Wine', nutrients: ['B12', 'Iron'] }
+            ] },
+            { day: 'Saturday', theme: 'Weekend', meals: [
+                { type: 'Breakfast', name: 'Huevos Rancheros', nutrients: ['Iron', 'Folate'] },
+                { type: 'Lunch', name: 'Vietnamese Shaking Beef', nutrients: ['B12', 'Iron'] },
+                { type: 'Dinner', name: 'Pan-Seared Salmon', nutrients: ['Omega-3', 'B12'] }
+            ] }
+        ];
+
+        const foods = [
+            { name: 'Wild Salmon', category: 'protein', nutrients: ['Omega-3', 'B12', 'Vit D', 'Selenium'], tier: 1 },
+            { name: 'Sardines', category: 'protein', nutrients: ['Omega-3', 'B12', 'Vit D', 'Calcium'], tier: 1 },
+            { name: 'Whole Eggs', category: 'protein', nutrients: ['B12', 'Vit D', 'Choline', 'Selenium'], tier: 1 },
+            { name: 'Beef Liver', category: 'protein', nutrients: ['B12', 'Iron', 'Zinc', 'Vit A'], tier: 1 },
+            { name: 'Spinach', category: 'produce', nutrients: ['Magnesium', 'Iron', 'Folate', 'Vit K'], tier: 1 },
+            { name: 'Kale', category: 'produce', nutrients: ['Vit K', 'Vit C', 'Vit A', 'Calcium'], tier: 1 },
+            { name: 'Grass-Fed Beef', category: 'protein', nutrients: ['B12', 'Iron', 'Zinc'], tier: 2 },
+            { name: 'Chicken Thighs', category: 'protein', nutrients: ['B6', 'B12', 'Zinc'], tier: 2 },
+            { name: 'Lamb', category: 'protein', nutrients: ['B12', 'Iron', 'Zinc'], tier: 2 },
+            { name: 'Mussels', category: 'protein', nutrients: ['B12', 'Iron', 'Zinc'], tier: 2 },
+            { name: 'Shrimp', category: 'protein', nutrients: ['B12', 'Selenium', 'Zinc'], tier: 2 },
+            { name: 'Cod', category: 'protein', nutrients: ['B12', 'Selenium', 'Omega-3'], tier: 2 },
+            { name: 'Avocado', category: 'produce', nutrients: ['Potassium', 'Magnesium', 'Folate'], tier: 2 },
+            { name: 'Sweet Potato', category: 'produce', nutrients: ['Vit A', 'Potassium', 'Vit C'], tier: 2 },
+            { name: 'Greek Yogurt', category: 'dairy', nutrients: ['Calcium', 'B12', 'Probiotics'], tier: 2 },
+            { name: 'Feta Cheese', category: 'dairy', nutrients: ['Calcium', 'B12'], tier: 2 },
+            { name: 'Walnuts', category: 'pantry', nutrients: ['Omega-3', 'Magnesium'], tier: 2 },
+            { name: 'Dark Chocolate', category: 'pantry', nutrients: ['Magnesium', 'Iron', 'Zinc'], tier: 2 },
+            { name: 'Olive Oil', category: 'pantry', nutrients: ['Vit E', 'Vit K'], tier: 3 },
+            { name: 'Tahini', category: 'pantry', nutrients: ['Calcium', 'Magnesium'], tier: 3 },
+            { name: 'Chickpeas', category: 'pantry', nutrients: ['Folate', 'Iron', 'Fiber'], tier: 3 },
+            { name: 'Garlic', category: 'produce', nutrients: ['Vit C', 'B6'], tier: 3 },
+            { name: 'Lemons', category: 'produce', nutrients: ['Vit C'], tier: 3 }
+        ];
+
+        const categories = { produce: { name: '🥬 Produce' }, protein: { name: '🥩 Protein' }, dairy: { name: '🧀 Dairy' }, pantry: { name: '🥜 Pantry' } };
+
+        let filters = { skill: ['beginner', 'intermediate', 'advanced'], time: ['quick', 'medium', 'long'], type: 'all' };
+        let sortBy = 'skill-asc';
+        let checkedItems = {};
+        let shoppingFilter = 'all';
+
+        function init() {
+            loadChecked();
+            renderMealTypeTabs();
+            renderMeals();
+            renderWeekPlan();
+            renderPowerFoods();
+            renderShoppingFilterBar();
+            renderShoppingList();
+        }
+
+        function loadChecked() {
+            const stored = localStorage.getItem('shopping_checked');
+            if (stored) checkedItems = JSON.parse(stored);
+        }
+
+        function saveChecked() {
+            localStorage.setItem('shopping_checked', JSON.stringify(checkedItems));
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function toggleFilter(category, value) {
+            const arr = filters[category];
+            const idx = arr.indexOf(value);
+            if (idx > -1) {
+                if (arr.length > 1) arr.splice(idx, 1);
+            } else {
+                arr.push(value);
+            }
+            updateFilterChips();
+            renderMealTypeTabs();
+            renderMeals();
+        }
+
+        function updateFilterChips() {
+            document.querySelectorAll('.filter-chip.skill-beginner').forEach(c => c.classList.toggle('active', filters.skill.includes('beginner')));
+            document.querySelectorAll('.filter-chip.skill-intermediate').forEach(c => c.classList.toggle('active', filters.skill.includes('intermediate')));
+            document.querySelectorAll('.filter-chip.skill-advanced').forEach(c => c.classList.toggle('active', filters.skill.includes('advanced')));
+            document.querySelectorAll('.filter-chip.time-quick').forEach(c => c.classList.toggle('active', filters.time.includes('quick')));
+            document.querySelectorAll('.filter-chip.time-medium').forEach(c => c.classList.toggle('active', filters.time.includes('medium')));
+            document.querySelectorAll('.filter-chip.time-long').forEach(c => c.classList.toggle('active', filters.time.includes('long')));
+        }
+
+        function resetFilters() {
+            filters = { skill: ['beginner', 'intermediate', 'advanced'], time: ['quick', 'medium', 'long'], type: 'all' };
+            document.getElementById('sortSelect').value = 'skill-asc';
+            sortBy = 'skill-asc';
+            updateFilterChips();
+            renderMealTypeTabs();
+            renderMeals();
+        }
+
+        function applySort() {
+            sortBy = document.getElementById('sortSelect').value;
+            renderMeals();
+        }
+
+        function setTypeFilter(type) {
+            filters.type = type;
+            renderMealTypeTabs();
+            renderMeals();
+        }
+
+        function getFilteredAndSortedMeals() {
+            let filtered = meals.filter(m => {
+                const typeMatch = filters.type === 'all' || m.type === filters.type;
+                const skillMatch = filters.skill.includes(m.skill);
+                const timeMatch = filters.time.includes(m.time);
+                return typeMatch && skillMatch && timeMatch;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                switch (sortBy) {
+                    case 'skill-asc': return a.skillOrder - b.skillOrder || a.timeMin - b.timeMin;
+                    case 'skill-desc': return b.skillOrder - a.skillOrder || a.timeMin - b.timeMin;
+                    case 'time-asc': return a.timeMin - b.timeMin;
+                    case 'time-desc': return b.timeMin - a.timeMin;
+                    case 'name-asc': return a.name.localeCompare(b.name);
+                    default: return 0;
+                }
+            });
+
+            return filtered;
+        }
+
+        function renderMealTypeTabs() {
+            const types = ['all', 'breakfast', 'lunch', 'dinner', 'snack'];
+            const labels = { all: 'All', breakfast: '🍳 Breakfast', lunch: '🥗 Lunch', dinner: '🍽️ Dinner', snack: '🥜 Snacks' };
+            const counts = {};
+            types.forEach(t => {
+                counts[t] = meals.filter(m => {
+                    const typeMatch = t === 'all' || m.type === t;
+                    const skillMatch = filters.skill.includes(m.skill);
+                    const timeMatch = filters.time.includes(m.time);
+                    return typeMatch && skillMatch && timeMatch;
+                }).length;
+            });
+            document.getElementById('mealTypeTabs').innerHTML = types.map(t =>
+                `<button class="meal-type-tab ${filters.type === t ? 'active' : ''}" onclick="setTypeFilter('${t}')">${labels[t]} <span class="count">(${counts[t]})</span></button>`
+            ).join('');
+        }
+
+        function renderMeals() {
+            const filtered = getFilteredAndSortedMeals();
+            document.getElementById('resultsCount').textContent = `${filtered.length} recipes`;
+            document.getElementById('noResults').style.display = filtered.length === 0 ? 'block' : 'none';
+
+            document.getElementById('mealGrid').innerHTML = filtered.map(m => `
+                <div class="meal-card">
+                    <div class="meal-header">
+                        <div class="meal-header-top">
+                            <div class="meal-name">${m.name}</div>
+                            <div class="meal-badges">
+                                <span class="meal-badge ${m.skill}">${m.skill.charAt(0).toUpperCase() + m.skill.slice(1)}</span>
+                                <span class="meal-badge time">${m.timeMin} min</span>
+                            </div>
+                        </div>
+                        <div class="meal-meta-row">
+                            <span class="meal-cuisine">${m.cuisine}</span>
+                        </div>
+                    </div>
+                    <div class="meal-body">
+                        <div class="meal-description">${m.description}</div>
+                        <div class="meal-section">
+                            <div class="meal-section-title">Ingredients</div>
+                            <div class="meal-ingredients">${m.ingredients}</div>
+                        </div>
+                    </div>
+                    <div class="meal-footer">
+                        <div class="meal-nutrients">${m.nutrients.map(n => `<span class="meal-nutrient">${n}</span>`).join('')}</div>
+                        ${m.tip ? `<div class="meal-tip">${m.tip}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderWeekPlan() {
+            document.getElementById('weekPlan').innerHTML = weekPlan.map(day => `
+                <div class="day-card">
+                    <div class="day-header">
+                        <span class="day-name">${day.day}</span>
+                        <span class="day-theme">${day.theme}</span>
+                    </div>
+                    <div class="day-meals">
+                        ${day.meals.map(m => `
+                            <div class="day-meal">
+                                <span class="day-meal-type">${m.type}</span>
+                                <div class="day-meal-content"><h4>${m.name}</h4></div>
+                                <div class="day-meal-nutrients">${m.nutrients.map(n => `<span>${n}</span>`).join('')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${day.prepNote ? `<div class="prep-note"><strong>Prep:</strong> ${day.prepNote}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderPowerFoods() {
+            const tiers = [
+                { tier: 1, emoji: '🏆', title: 'Tier 1: Powerhouses', desc: '4+ nutrients' },
+                { tier: 2, emoji: '🥈', title: 'Tier 2: Strong', desc: '3 nutrients' },
+                { tier: 3, emoji: '🥉', title: 'Tier 3: Foundations', desc: 'Essential support' }
+            ];
+            document.getElementById('powerFoodsContent').innerHTML = tiers.map(t => `
+                <div class="tier-header"><span style="font-size:24px;">${t.emoji}</span><h3>${t.title}</h3></div>
+                <div class="power-foods">
+                    ${foods.filter(f => f.tier === t.tier).map(f => `
+                        <div class="power-food tier${t.tier}">
+                            <div class="food-name">${f.name}</div>
+                            <div class="food-nutrients">${f.nutrients.map(n => `<span class="nutrient-tag">${n}</span>`).join('')}</div>
+                            <div class="nutrient-count">${f.nutrients.length} nutrients</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function renderShoppingFilterBar() {
+            let html = `<button class="filter-chip ${shoppingFilter === 'all' ? 'active' : ''}" onclick="setShoppingFilter('all')">All</button>`;
+            Object.entries(categories).forEach(([key, cat]) => {
+                html += `<button class="filter-chip ${shoppingFilter === key ? 'active' : ''}" onclick="setShoppingFilter('${key}')">${cat.name}</button>`;
+            });
+            document.getElementById('shoppingFilterBar').innerHTML = html;
+        }
+
+        function setShoppingFilter(filter) {
+            shoppingFilter = filter;
+            renderShoppingFilterBar();
+            renderShoppingList();
+        }
+
+        function renderShoppingList() {
+            const filtered = shoppingFilter === 'all' ? foods : foods.filter(f => f.category === shoppingFilter);
+            const grouped = {};
+            filtered.forEach(f => { if (!grouped[f.category]) grouped[f.category] = []; grouped[f.category].push(f); });
+
+            document.getElementById('shoppingList').innerHTML = Object.entries(grouped).map(([catKey, catFoods]) => {
+                const cat = categories[catKey];
+                const checkedCount = catFoods.filter(f => checkedItems[f.name]).length;
+                return `
+                    <div class="shopping-section">
+                        <div class="section-header">${cat.name}<span class="section-count">${checkedCount}/${catFoods.length}</span></div>
+                        <div class="shopping-items">
+                            ${catFoods.map(f => `
+                                <div class="shopping-item ${checkedItems[f.name] ? 'checked' : ''}">
+                                    <div class="item-checkbox ${checkedItems[f.name] ? 'checked' : ''}" onclick="toggleItem('${f.name}')"></div>
+                                    <span class="item-name">${f.name}</span>
+                                    <div class="item-nutrients">${f.nutrients.slice(0, 3).map(n => `<span class="item-nutrient">${n}</span>`).join('')}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleItem(name) { checkedItems[name] = !checkedItems[name]; saveChecked(); renderShoppingList(); }
+        function uncheckAll() { checkedItems = {}; saveChecked(); renderShoppingList(); }
+        function copyList() {
+            const unchecked = foods.filter(f => !checkedItems[f.name]);
+            const grouped = {};
+            unchecked.forEach(f => { const cat = categories[f.category].name; if (!grouped[cat]) grouped[cat] = []; grouped[cat].push(f.name); });
+            let text = 'SHOPPING LIST\n\n';
+            Object.entries(grouped).forEach(([cat, items]) => { text += `${cat}\n`; items.forEach(item => text += `☐ ${item}\n`); text += '\n'; });
+            navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+        }
+
+        init();
+    </script>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.querySelector('.theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

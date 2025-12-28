@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subtraction Habits Tracker</title>
+    <style>
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 12px;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 13px;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: white;
+            opacity: 0.9;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        
+        .nav-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+        
+        .date-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        
+        .date-nav button {
+            background: var(--card-bg);
+            border: 2px solid #1a5f5f;
+            color: var(--accent);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .date-nav button:hover {
+            background: #1a5f5f;
+            color: white;
+        }
+        
+        .date-nav .current-date {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            min-width: 180px;
+            text-align: center;
+        }
+        
+        .date-nav .today-btn {
+            width: auto;
+            padding: 0 14px;
+            border-radius: 18px;
+            font-size: 12px;
+            height: 32px;
+        }
+        
+        .focus-banner {
+            background: linear-gradient(135deg, #e85a4f 0%, #ff7b6b 100%);
+            color: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .focus-banner h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .focus-banner p {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        
+        .focus-banner button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin-top: 8px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 500px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            padding: 14px 10px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .stat-card .label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .stat-card.streak .value {
+            color: #e85a4f;
+        }
+        
+        .habits-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
+        
+        .habits-card h2 {
+            color: var(--accent);
+            font-size: 16px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .habit-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .habit-item:last-child {
+            border-bottom: none;
+        }
+        
+        .habit-item.focused {
+            background: #fffbf0;
+            margin: 0 -20px;
+            padding: 14px 20px;
+            border-left: 3px solid #e85a4f;
+        }
+        
+        .habit-checkbox {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-right: 14px;
+        }
+        
+        .habit-checkbox:hover {
+            border-color: var(--accent);
+        }
+        
+        .habit-checkbox.checked {
+            background: #1a5f5f;
+            border-color: var(--accent);
+        }
+        
+        .habit-checkbox.checked::after {
+            content: "✓";
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .habit-checkbox.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .habit-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .habit-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+            margin-bottom: 1px;
+        }
+        
+        .habit-detail {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        .habit-streak {
+            text-align: right;
+            min-width: 50px;
+        }
+        
+        .habit-streak .count {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e85a4f;
+        }
+        
+        .habit-streak .label {
+            font-size: 9px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        
+        .week-view {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+        
+        .week-view h2 {
+            color: var(--accent);
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
+        
+        .week-grid {
+            display: grid;
+            grid-template-columns: minmax(100px, 1fr) repeat(7, 38px);
+            gap: 6px;
+            font-size: 12px;
+            min-width: 380px;
+        }
+        
+        .week-grid .header {
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 6px 0;
+        }
+        
+        .week-grid .habit-label {
+            padding: 6px 0;
+            color: var(--text);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .week-grid .day-cell {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 11px;
+        }
+        
+        .week-grid .day-cell.completed {
+            background: #1a5f5f;
+            color: white;
+        }
+        
+        .week-grid .day-cell.missed {
+            background: var(--bg);
+            color: #ccc;
+        }
+        
+        .week-grid .day-cell.future {
+            background: #fafafa;
+            color: #ddd;
+        }
+        
+        .week-grid .day-cell.today {
+            box-shadow: 0 0 0 2px #e85a4f;
+        }
+        
+        .all-complete {
+            background: linear-gradient(135deg, #4a7c59 0%, #6ab04c 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .all-complete h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        
+        .all-complete p {
+            opacity: 0.9;
+            font-size: 12px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--text-secondary);
+        }
+        
+        .btn-danger {
+            background: #fde8e8;
+            color: #c0392b;
+        }
+        
+        .disclaimer {
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 16px;
+        }
+        
+        .cross-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .cross-link {
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.2s;
+        }
+        
+        .cross-link:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        
+        .habit-checkbox.just-checked {
+            animation: celebrate 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Subtraction Habits</h1>
+            <p>The 80/20 of nutrient protection</p>
+            <a href="index.html" class="nav-link">← Back to Dashboard</a>
+        </header>
+        
+        <div id="focusBanner" class="focus-banner" style="display: none;">
+            <h3>🎯 Focus Habits from Your Assessment</h3>
+            <p>These habits address your highest-risk areas.</p>
+            <button onclick="dismissFocus()">Got it</button>
+        </div>
+        
+        <div class="date-nav">
+            <button onclick="changeDate(-1)">←</button>
+            <span class="current-date" id="currentDate"></span>
+            <button onclick="changeDate(1)">→</button>
+            <button class="today-btn" onclick="goToday()">Today</button>
+        </div>
+        
+        <div id="celebration" class="all-complete" style="display: none;">
+            <h3>🎯 All habits complete!</h3>
+            <p>Another day of protecting your nutrients.</p>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="value" id="todayCount">0/5</div>
+                <div class="label">Today</div>
+            </div>
+            <div class="stat-card streak">
+                <div class="value" id="currentStreak">0</div>
+                <div class="label">Streak</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="weekPercent">0%</div>
+                <div class="label">This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="bestStreak">0</div>
+                <div class="label">Best</div>
+            </div>
+        </div>
+        
+        <div class="habits-card">
+            <h2>Daily Habits</h2>
+            <div id="habitsList"></div>
+        </div>
+        
+        <div class="week-view">
+            <h2>This Week</h2>
+            <div class="week-grid" id="weekGrid"></div>
+        </div>
+        
+        <div class="cross-links">
+            <a href="calculator.html" class="cross-link">📊 Retake Assessment</a>
+            <a href="subtraction_supplement_guide.html" class="cross-link">📖 Read the Guide</a>
+            <a href="bloodwork.html" class="cross-link">🔬 Log Bloodwork</a>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="exportData()">Export</button>
+            <button class="btn btn-secondary" onclick="importData()">Import</button>
+            <button class="btn btn-danger" onclick="clearData()">Reset</button>
+        </div>
+        
+        <p class="disclaimer">All data stored locally in your browser.</p>
+    </div>
+
+    <script>
+        const habits = [
+            { id: 'no_sugar', name: 'No added sugar', detail: 'Avoid foods with sugar in first 3 ingredients' },
+            { id: 'caffeine_timing', name: 'Caffeine timing', detail: '1+ hour away from meals' },
+            { id: 'sleep_7', name: '7+ hours sleep', detail: 'Quality sleep for recovery' },
+            { id: 'movement', name: '20 min movement', detail: 'Walk, workout, or active time' },
+            { id: 'whole_foods', name: 'Whole food meals', detail: 'Mostly unprocessed foods today' }
+        ];
+        
+        let currentDate = new Date();
+        let data = {};
+        let focusHabits = [];
+        
+        function init() {
+            loadData();
+            checkFocusParams();
+            render();
+        }
+        
+        function checkFocusParams() {
+            const params = new URLSearchParams(window.location.search);
+            const focus = params.get('focus');
+            if (focus) {
+                focusHabits = focus.split(',');
+                document.getElementById('focusBanner').style.display = 'block';
+            }
+        }
+        
+        function dismissFocus() {
+            document.getElementById('focusBanner').style.display = 'none';
+            // Clear URL params without reload
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+        
+        function loadData() {
+            const stored = localStorage.getItem('subtraction_habits');
+            if (stored) data = JSON.parse(stored);
+        }
+        
+        function saveData() {
+            localStorage.setItem('subtraction_habits', JSON.stringify(data));
+        }
+        
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+        
+        function isToday(date) {
+            return getDateKey(date) === getDateKey(new Date());
+        }
+        
+        function isFuture(date) {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const cmp = new Date(date); cmp.setHours(0,0,0,0);
+            return cmp > today;
+        }
+        
+        function changeDate(delta) {
+            currentDate.setDate(currentDate.getDate() + delta);
+            render();
+        }
+        
+        function goToday() {
+            currentDate = new Date();
+            render();
+        }
+        
+        function toggleHabit(habitId) {
+            const dateKey = getDateKey(currentDate);
+            if (isFuture(currentDate)) return;
+            if (!data[dateKey]) data[dateKey] = {};
+            data[dateKey][habitId] = !data[dateKey][habitId];
+            saveData();
+            
+            const cb = document.querySelector(`[data-habit="${habitId}"]`);
+            if (cb && data[dateKey][habitId]) {
+                cb.classList.add('just-checked');
+                setTimeout(() => cb.classList.remove('just-checked'), 300);
+            }
+            render();
+        }
+        
+        function getCompletedCount(dateKey) {
+            if (!data[dateKey]) return 0;
+            return habits.filter(h => data[dateKey][h.id]).length;
+        }
+        
+        function calculateStreak() {
+            let streak = 0;
+            let date = new Date();
+            if (getCompletedCount(getDateKey(date)) < habits.length) date.setDate(date.getDate() - 1);
+            while (getCompletedCount(getDateKey(date)) === habits.length) {
+                streak++;
+                date.setDate(date.getDate() - 1);
+            }
+            return streak;
+        }
+        
+        function calculateHabitStreak(habitId) {
+            let streak = 0;
+            let date = new Date();
+            const todayKey = getDateKey(date);
+            if (!data[todayKey] || !data[todayKey][habitId]) date.setDate(date.getDate() - 1);
+            while (data[getDateKey(date)] && data[getDateKey(date)][habitId]) {
+                streak++;
+                date.setDate(date.getDate() - 1);
+            }
+            return streak;
+        }
+        
+        function calculateBestStreak() {
+            const dates = Object.keys(data).sort();
+            if (dates.length === 0) return 0;
+            let best = 0, current = 0;
+            let date = new Date(dates[0]);
+            const today = new Date();
+            while (date <= today) {
+                if (getCompletedCount(getDateKey(date)) === habits.length) {
+                    current++;
+                    best = Math.max(best, current);
+                } else {
+                    current = 0;
+                }
+                date.setDate(date.getDate() + 1);
+            }
+            return best;
+        }
+        
+        function calculateWeekPercent() {
+            const today = new Date();
+            const dow = today.getDay();
+            const start = new Date(today);
+            start.setDate(today.getDate() - dow);
+            let completed = 0, possible = 0;
+            for (let i = 0; i <= dow; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                completed += getCompletedCount(getDateKey(d));
+                possible += habits.length;
+            }
+            return possible > 0 ? Math.round((completed / possible) * 100) : 0;
+        }
+        
+        function render() {
+            document.getElementById('currentDate').textContent = formatDate(currentDate);
+            
+            const dateKey = getDateKey(currentDate);
+            const dayData = data[dateKey] || {};
+            const completedToday = getCompletedCount(dateKey);
+            const isFutureDate = isFuture(currentDate);
+            
+            document.getElementById('todayCount').textContent = `${completedToday}/${habits.length}`;
+            document.getElementById('currentStreak').textContent = calculateStreak();
+            document.getElementById('weekPercent').textContent = calculateWeekPercent() + '%';
+            document.getElementById('bestStreak').textContent = calculateBestStreak();
+            
+            document.getElementById('celebration').style.display = 
+                (completedToday === habits.length && isToday(currentDate)) ? 'block' : 'none';
+            
+            document.getElementById('habitsList').innerHTML = habits.map(h => {
+                const checked = dayData[h.id];
+                const streak = calculateHabitStreak(h.id);
+                const isFocused = focusHabits.includes(h.id);
+                return `
+                    <div class="habit-item ${isFocused ? 'focused' : ''}">
+                        <div class="habit-checkbox ${checked ? 'checked' : ''} ${isFutureDate ? 'disabled' : ''}" 
+                             data-habit="${h.id}"
+                             onclick="${isFutureDate ? '' : `toggleHabit('${h.id}')`}"></div>
+                        <div class="habit-info">
+                            <div class="habit-name">${h.name}${isFocused ? ' 🎯' : ''}</div>
+                            <div class="habit-detail">${h.detail}</div>
+                        </div>
+                        <div class="habit-streak">
+                            <div class="count">${streak}</div>
+                            <div class="label">streak</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            renderWeekView();
+        }
+        
+        function renderWeekView() {
+            const today = new Date();
+            const dow = today.getDay();
+            const start = new Date(today);
+            start.setDate(today.getDate() - dow);
+            
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            
+            let html = '<div class="header"></div>';
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                html += `<div class="header">${days[i]}<br>${d.getDate()}</div>`;
+            }
+            
+            habits.forEach(h => {
+                html += `<div class="habit-label">${h.name}</div>`;
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(start);
+                    d.setDate(start.getDate() + i);
+                    const dk = getDateKey(d);
+                    const complete = data[dk] && data[dk][h.id];
+                    const todayCell = isToday(d);
+                    const futureCell = isFuture(d);
+                    
+                    let cls = 'day-cell';
+                    if (futureCell) cls += ' future';
+                    else if (complete) cls += ' completed';
+                    else cls += ' missed';
+                    if (todayCell) cls += ' today';
+                    
+                    html += `<div class="${cls}">${complete ? '✓' : ''}</div>`;
+                }
+            });
+            
+            document.getElementById('weekGrid').innerHTML = html;
+        }
+        
+        function exportData() {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `habits-${getDateKey(new Date())}.json`;
+            a.click();
+        }
+        
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        data = { ...data, ...imported };
+                        saveData();
+                        render();
+                        alert('Imported!');
+                    } catch (err) { alert('Invalid file'); }
+                };
+                reader.readAsText(e.target.files[0]);
+            };
+            input.click();
+        }
+        
+        function clearData() {
+            if (confirm('Delete all habit data?')) {
+                data = {};
+                saveData();
+                render();
+            }
+        }
+        
+        init();
+    </script>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.querySelector('.theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Subtraction Supplement Guide</title>
+    <style>
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: var(--text);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+            background: #f9f9f9;
+        }
+        
+        .nav-bar {
+            background: #1a5f5f;
+            margin: -16px -16px 20px -16px;
+            padding: 12px 16px;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .nav-bar a:hover { text-decoration: underline; }
+        
+        @media print {
+            .nav-bar { display: none; }
+            body { padding: 0.4in; background: var(--card-bg); }
+            .page-break { page-break-before: always; }
+            .no-break { page-break-inside: avoid; }
+        }
+        
+        h1 {
+            font-size: 22pt;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            font-size: 12pt;
+            color: #e85a4f;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            color: var(--accent);
+            margin-top: 20px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #1a5f5f;
+            padding-bottom: 4px;
+        }
+        
+        h3 {
+            font-size: 12pt;
+            color: #4a7c59;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+        
+        p { margin-bottom: 10px; }
+        
+        .intro { font-size: 10.5pt; margin-bottom: 14px; }
+        
+        .disclaimer {
+            font-size: 9pt;
+            color: var(--text-secondary);
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 18px;
+            background: #fafafa;
+            border-radius: 6px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+            font-size: 10pt;
+        }
+        
+        th {
+            background: #1a5f5f;
+            color: white;
+            text-align: left;
+            padding: 8px 10px;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            background: #f8f8f8;
+            vertical-align: top;
+        }
+        
+        td:first-child { font-weight: bold; width: 130px; }
+        
+        .signs-foods {
+            font-size: 9.5pt;
+            color: #444;
+            margin-bottom: 16px;
+        }
+        
+        .quote {
+            font-size: 11pt;
+            color: var(--accent);
+            text-align: center;
+            font-style: italic;
+            font-weight: bold;
+            margin: 24px 0;
+            padding: 14px;
+        }
+        
+        .leverage {
+            background: #e8f4f4;
+            padding: 14px;
+            border-left: 4px solid #1a5f5f;
+            margin: 14px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .tip { font-size: 10pt; margin-bottom: 8px; }
+        
+        ul { margin-left: 20px; margin-bottom: 12px; }
+        li { margin-bottom: 5px; }
+        
+        .tracker {
+            margin-top: 12px;
+        }
+        
+        .tracker th, .tracker td {
+            text-align: center;
+            width: 11%;
+        }
+        
+        .tracker td:first-child {
+            text-align: left;
+            width: 23%;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 10pt;
+            color: var(--text-secondary);
+        }
+        
+        .cross-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .cross-link {
+            background: #1a5f5f;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .cross-link:hover {
+            background: #155050;
+        }
+        
+        /* Mobile table scroll */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 12px;
+        }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 20pt; }
+            h2 { font-size: 13pt; }
+            table { font-size: 9pt; min-width: 500px; }
+            td:first-child { width: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav-bar">
+    <a href="index.html">← Back to Dashboard</a>
+</div>
+
+<h1>THE SUBTRACTION SUPPLEMENT GUIDE</h1>
+<p class="subtitle">Stop Taking. Start Removing.</p>
+
+<p class="intro">The supplement industry sells you back what the food industry took away. But you cannot supplement your way out of a bad diet and lifestyle. This guide maps what depletes each nutrient so you can remove the offender instead of adding another pill.</p>
+
+<p class="disclaimer"><strong>DISCLAIMER:</strong> Educational purposes only. Not medical advice. Do not stop prescribed medications or supplements without consulting your healthcare provider.</p>
+
+<h2>The Repeat Offenders</h2>
+<p>The same substances deplete multiple nutrients. Remove these and you address many deficiencies at once:</p>
+
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Offender</th><th>What It Depletes</th></tr>
+    <tr><td>Sugar</td><td>Magnesium, B Vitamins, Vitamin C, Vitamin D, Calcium, Chromium</td></tr>
+    <tr><td>Alcohol</td><td>B Vitamins, Magnesium, Zinc, Vitamin C, Vitamin D, Iron, Calcium</td></tr>
+    <tr><td>Excess Caffeine</td><td>Iron, Calcium, Vitamin D, Magnesium, B Vitamins</td></tr>
+    <tr><td>Chronic Stress</td><td>Magnesium, B Vitamins, Vitamin C, Vitamin D, Zinc, Iron</td></tr>
+    <tr><td>Antacids / PPIs</td><td>B12, Iron, Magnesium, Calcium, Zinc</td></tr>
+    <tr><td>Sedentary Lifestyle</td><td>Vitamin D, Calcium utilization, overall metabolism</td></tr>
+</table>
+</div>
+
+<div class="leverage">
+    <strong>THE LEVERAGE PLAY:</strong> Remove sugar alone and you address deficiencies in Magnesium, B Vitamins, Vitamin C, Vitamin D, Calcium, and Chromium. <strong>That's 6+ supplements replaced by ONE subtraction.</strong>
+</div>
+
+<div class="page-break"></div>
+<h1>Part 1: The Science</h1>
+
+<div class="no-break">
+<h2>Magnesium</h2>
+<p>Involved in 300+ enzymatic reactions. The most commonly supplemented mineral.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Sugar</td><td>Significant magnesium required to metabolize sugar. Low Mg impairs blood sugar regulation, which depletes more Mg—a vicious cycle.</td></tr>
+    <tr><td>Alcohol</td><td>Increases urinary excretion. Up to 50% of heavy drinkers are deficient.</td></tr>
+    <tr><td>Excess Caffeine</td><td>High doses increase urinary excretion by reducing renal reabsorption.</td></tr>
+    <tr><td>Chronic Stress</td><td>Mg needs can DOUBLE under stress. Low Mg increases stress susceptibility—another vicious cycle.</td></tr>
+    <tr><td>High-dose Vit D</td><td>Body requires Mg to metabolize Vitamin D. Excessive supplementation depletes Mg stores.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Muscle cramps, eye twitches, anxiety, insomnia, fatigue, headaches. <strong>Foods:</strong> Pumpkin seeds, spinach, dark chocolate (85%+), almonds, avocado.</p>
+</div>
+
+<div class="no-break">
+<h2>B Vitamins</h2>
+<p>Essential for energy, mood, and nervous system. Water-soluble—must be replenished daily.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Sugar / Refined Carbs</td><td>B1, B2, B3, B5 required to metabolize glucose. Refined carbs provide calories without the B vitamins needed to process them.</td></tr>
+    <tr><td>Alcohol</td><td>Leading cause of B1 deficiency in developed countries. Up to 80% of heavy drinkers deficient in folate.</td></tr>
+    <tr><td>Chronic Stress</td><td>Burned rapidly for neurotransmitter production (serotonin, GABA, dopamine).</td></tr>
+    <tr><td>Birth Control</td><td>Depletes B6, B12, and folate with long-term use.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Fatigue, brain fog, depression, numbness/tingling, mouth sores. <strong>Foods:</strong> Eggs, liver, nutritional yeast, salmon, leafy greens.</p>
+</div>
+
+<div class="page-break"></div>
+
+<div class="no-break">
+<h2>Vitamin C</h2>
+<p>Critical for immunity, antioxidant protection, collagen, and iron absorption.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Sugar</td><td>Glucose and Vitamin C use the SAME transporter protein—and it prefers glucose. Sugar literally blocks Vitamin C absorption.</td></tr>
+    <tr><td>Chronic Stress</td><td>Adrenal glands require Vitamin C to produce cortisol and adrenaline. High stress = rapid depletion.</td></tr>
+    <tr><td>Smoking</td><td>Each cigarette depletes ~25mg. Smokers need 35mg/day more than non-smokers.</td></tr>
+    <tr><td>Alcohol</td><td>Reduces absorption and increases excretion.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Slow wound healing, easy bruising, bleeding gums, frequent infections. <strong>Foods:</strong> Bell peppers, citrus, strawberries, kiwi, broccoli.</p>
+</div>
+
+<div class="no-break">
+<h2>Vitamin D</h2>
+<p>Essential for immunity, bone health, mood. Functions more like a hormone than a vitamin.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Fructose / Sugar</td><td>Increases enzyme that DEGRADES Vitamin D while decreasing the enzyme that synthesizes it.</td></tr>
+    <tr><td>Indoor Lifestyle</td><td>Primary source is sunlight. 15-20 min of midday sun beats supplementation.</td></tr>
+    <tr><td>Chronic Stress</td><td>Excess cortisol blocks Vitamin D receptors, preventing absorption even when levels are adequate.</td></tr>
+    <tr><td>Obesity</td><td>Vitamin D is fat-soluble and gets sequestered in fat tissue, reducing bioavailability.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Fatigue, bone pain, muscle weakness, depression, frequent illness. <strong>Foods:</strong> Fatty fish, egg yolks, UV-exposed mushrooms. Sun remains primary source.</p>
+</div>
+
+<div class="page-break"></div>
+
+<div class="no-break">
+<h2>Iron</h2>
+<p>Critical for energy and oxygen transport. Most common deficiency in women, vegetarians, and athletes.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Coffee/Tea with Meals</td><td>Reduces absorption up to 80%. Polyphenols bind to non-heme iron. Separate by at least 1 hour.</td></tr>
+    <tr><td>Chronic Stress</td><td>Depletes iron stores—especially problematic for women and vegetarians.</td></tr>
+    <tr><td>Antacids / PPIs</td><td>Stomach acid required to convert iron to absorbable form.</td></tr>
+    <tr><td>Excess Calcium</td><td>Calcium competes with iron for absorption. Take at different times.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Fatigue, pale skin, shortness of breath, cold hands/feet, restless legs. <strong>Foods:</strong> Red meat, liver, oysters, sardines, spinach, lentils. Pair plant sources with Vitamin C.</p>
+</div>
+
+<div class="no-break">
+<h2>Zinc</h2>
+<p>Essential for immunity, wound healing, taste/smell, testosterone, and 300+ enzyme functions.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Alcohol</td><td>Significantly lower zinc in alcohol-dependent individuals. Affects both absorption and excretion.</td></tr>
+    <tr><td>Chronic Stress</td><td>Depletes zinc, which then increases inflammation and illness risk.</td></tr>
+    <tr><td>High-Phytate Diet</td><td>Grains and legumes contain phytic acid that binds zinc. Solution: soaking, sprouting, or fermenting.</td></tr>
+    <tr><td>Vegetarian Diet</td><td>Plant zinc less bioavailable. May need 50% more than omnivores.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Frequent infections, slow healing, loss of taste/smell, hair loss, low libido. <strong>Foods:</strong> Oysters, beef, crab, pumpkin seeds, chickpeas, cheese.</p>
+</div>
+
+<div class="page-break"></div>
+
+<div class="no-break">
+<h2>Calcium</h2>
+<p>Critical for bones, muscles, nerves, blood clotting. Works with magnesium, vitamin D, and K2.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Sugar</td><td>High sugar/insulin increases calcium excretion through urine.</td></tr>
+    <tr><td>Excess Caffeine</td><td>Each cup of coffee causes ~5mg calcium loss. Accumulates with heavy use.</td></tr>
+    <tr><td>High Sodium</td><td>For every 2,300mg sodium, you lose ~40mg calcium.</td></tr>
+    <tr><td>Sedentary Lifestyle</td><td>Weight-bearing exercise signals bones to retain calcium.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Muscle cramps, numbness, brittle nails, easy fractures. <strong>Foods:</strong> Dairy, sardines (with bones), leafy greens, almonds.</p>
+</div>
+
+<div class="no-break">
+<h2>Chromium</h2>
+<p>Essential for insulin function and blood sugar regulation. Heavily depleted by modern diet.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Sugar / Refined Carbs</td><td>Body uses chromium to process sugar. High intake = depletion. Creates insulin resistance cycle.</td></tr>
+    <tr><td>Processed Foods</td><td>Refining strips chromium. White flour has 98% less than whole wheat.</td></tr>
+    <tr><td>Stress / Exercise</td><td>Both increase urinary chromium excretion.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Blood sugar swings, sugar cravings, fatigue after eating. <strong>Foods:</strong> Broccoli, potatoes, garlic, beef, whole grains.</p>
+</div>
+
+<div class="no-break">
+<h2>Potassium</h2>
+<p>Critical for heart, muscles, nerves, blood pressure. Most people get less than half the recommended amount.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Remove</th><th>Why It Depletes</th></tr>
+    <tr><td>Alcohol / Caffeine</td><td>Diuretic effect increases potassium excretion.</td></tr>
+    <tr><td>High Sodium</td><td>Sodium and potassium work in opposition. High sodium = potassium loss.</td></tr>
+    <tr><td>Diuretics</td><td>Many blood pressure medications deplete potassium significantly.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Muscle weakness/cramps, fatigue, constipation, palpitations. <strong>Foods:</strong> Potatoes, bananas, avocados, spinach, salmon, coconut water.</p>
+</div>
+
+<div class="page-break"></div>
+
+<div class="no-break">
+<h2>Omega-3 Fatty Acids</h2>
+<p>Not a depletion story—an imbalance story. Modern diets are extremely skewed toward omega-6, creating systemic inflammation.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Imbalance</th><th>Why It Matters</th></tr>
+    <tr><td>Seed Oils (excess)</td><td>Soybean, corn, canola high in omega-6. Ideal ratio is 2:1 or lower. Most Americans at 15:1+.</td></tr>
+    <tr><td>Processed Foods</td><td>Nearly all contain seed oils, dramatically skewing the ratio.</td></tr>
+    <tr><td>Low Fish Intake</td><td>EPA/DHA primarily from fatty fish. Plant omega-3s (ALA) convert poorly.</td></tr>
+</table>
+</div>
+<p class="signs-foods"><strong>Signs:</strong> Dry skin, brittle hair, poor concentration, joint pain, mood issues. <strong>Foods:</strong> Salmon, mackerel, sardines, fish oil, walnuts, flaxseed.</p>
+</div>
+
+<div class="no-break">
+<h2>Medications That Deplete Nutrients</h2>
+<p>Do not stop medications—work with your provider to monitor and adjust.</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:120px">Medication</th><th style="width:130px">Depletes</th><th>Notes</th></tr>
+    <tr><td>Metformin</td><td>B12, Folate</td><td>Annual B12 testing recommended</td></tr>
+    <tr><td>Statins</td><td>CoQ10</td><td>Block pathway for both cholesterol AND CoQ10</td></tr>
+    <tr><td>PPIs / Antacids</td><td>B12, Fe, Mg, Ca, Zn</td><td>Stomach acid needed for absorption</td></tr>
+    <tr><td>Diuretics</td><td>K, Mg, Zn</td><td>Increase urinary mineral excretion</td></tr>
+    <tr><td>Birth Control</td><td>B6, B12, Folate, Mg</td><td>Long-term use = significant depletion</td></tr>
+    <tr><td>Corticosteroids</td><td>Ca, Vit D, K, Mg</td><td>Accelerate bone/mineral loss</td></tr>
+    <tr><td>NSAIDs</td><td>Vit C, Folate, Fe</td><td>Regular use increases excretion</td></tr>
+</table>
+</div>
+</div>
+
+<div class="page-break"></div>
+<h1>Part 2: Implementation</h1>
+
+<div class="no-break">
+<h2>The Priority Stack</h2>
+<p>Do not change everything at once. Work in order:</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:50px">Tier</th><th style="width:100px">Focus</th><th>Why This Order</th></tr>
+    <tr><td>1</td><td>Sugar</td><td>Highest leverage—addresses 6+ deficiencies. Start here.</td></tr>
+    <tr><td>2</td><td>Stress</td><td>Sleep, movement, boundaries. Enables all other changes.</td></tr>
+    <tr><td>3</td><td>Timing</td><td>Caffeine away from meals. Easy wins.</td></tr>
+    <tr><td>4</td><td>Reduction</td><td>Alcohol, excess caffeine. After foundation is solid.</td></tr>
+</table>
+</div>
+</div>
+
+<div class="no-break">
+<h2>The Substitution Map</h2>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:130px">Instead Of</th><th>Try This</th></tr>
+    <tr><td>Sugar cravings</td><td>Whole fruit, dates, frozen berries, 85%+ dark chocolate. Fiber changes everything.</td></tr>
+    <tr><td>Morning coffee</td><td>Delay 90 min after waking to let cortisol peak naturally. Or green tea.</td></tr>
+    <tr><td>Coffee with meals</td><td>Coffee 1 hour before OR after meals. Water during.</td></tr>
+    <tr><td>Stress eating</td><td>5-min walk, cold water on face, box breathing (4-4-4-4). Address state, not symptom.</td></tr>
+    <tr><td>Soda</td><td>Sparkling water + citrus, unsweetened tea.</td></tr>
+    <tr><td>Processed snacks</td><td>Nuts, cheese, eggs, veggies + hummus. Protein + fat = satiety.</td></tr>
+    <tr><td>Fast food</td><td>Sunday meal prep. Imperfect homemade beats optimized fast food.</td></tr>
+</table>
+</div>
+</div>
+
+<h3>Eating Out Strategies</h3>
+<p><strong>Any restaurant:</strong> Protein + vegetables as base. Dressings on side. Skip bread basket. "Grilled" over "crispy."</p>
+<p><strong>Fast food:</strong> Burger no bun, grilled not breaded, side salad not fries, water not soda.</p>
+<p><strong>Social situations:</strong> Eat before events. "No thanks, I'm good"—no explanation needed.</p>
+
+<div class="page-break"></div>
+
+<div class="no-break">
+<h2>The Timeline</h2>
+<p>What to expect when removing sugar and processed foods:</p>
+<div class="table-wrapper">
+<table>
+    <tr><th style="width:90px">When</th><th style="width:200px">What Happens</th><th>What It Means</th></tr>
+    <tr><td>Days 1-3</td><td>Headaches, irritability, intense cravings</td><td>Withdrawal is real. Push through.</td></tr>
+    <tr><td>Week 1-2</td><td>Cravings peak then subside</td><td>Body recalibrating. Blood sugar improving.</td></tr>
+    <tr><td>Week 3-4</td><td>Energy stabilizes, sleep improves, fog lifts</td><td>Nutrient absorption improving.</td></tr>
+    <tr><td>Month 2-3</td><td>Cravings diminish, taste resets</td><td>Sweet things taste TOO sweet.</td></tr>
+    <tr><td>Month 3+</td><td>New baseline, old foods feel wrong</td><td>Identity shift complete.</td></tr>
+</table>
+</div>
+</div>
+
+<div class="no-break">
+<h2>Hidden Sugar Names</h2>
+<p><strong>Obvious:</strong> Sugar, brown sugar, cane sugar, coconut sugar, powdered sugar.</p>
+<p><strong>Syrups:</strong> High-fructose corn syrup, corn syrup, maple syrup, agave, rice syrup, malt syrup.</p>
+<p><strong>The "-ose" family:</strong> Glucose, fructose, dextrose, sucrose, maltose.</p>
+<p><strong>Sneaky:</strong> Maltodextrin, fruit juice concentrate, evaporated cane juice, barley malt, molasses.</p>
+<p><strong>Rule:</strong> If any of these are in the first 3 ingredients, reconsider.</p>
+</div>
+
+<div class="no-break">
+<h2>Troubleshooting</h2>
+<p class="tip"><strong>"I caved and ate sugar."</strong> One meal doesn't undo progress. Next meal, back to baseline. What triggered it? Address the root.</p>
+<p class="tip"><strong>"Cravings are unbearable."</strong> Eat more protein and fat—you may be under-eating. Are you sleeping enough?</p>
+<p class="tip"><strong>"No time to cook."</strong> Sunday prep: 2 hours = 5 days of lunches. Rotisserie + salad = 5-min dinner.</p>
+<p class="tip"><strong>"I feel worse, not better."</strong> First 2 weeks can feel worse (withdrawal). Past week 3: eating enough? electrolytes?</p>
+<p class="tip"><strong>"Social pressure."</strong> Prepare your line: "No thanks, I'm good." No explanation needed.</p>
+</div>
+
+<div class="page-break"></div>
+
+<div class="no-break">
+<h2>Minimum Effective Dose</h2>
+<p>Not ready to go all-in? These 4 changes give you 80% of the benefit:</p>
+<p class="tip"><strong>1. Cut added sugar by 50%</strong> — If sugar is in first 3 ingredients, skip it.</p>
+<p class="tip"><strong>2. No caffeine with meals</strong> — 1-hour buffer. Protects mineral absorption. Free and easy.</p>
+<p class="tip"><strong>3. Sleep 7+ hours</strong> — Non-negotiable for stress recovery and nutrient protection.</p>
+<p class="tip"><strong>4. Move 20 minutes daily</strong> — Walk counts. Improves everything.</p>
+</div>
+
+<div class="no-break">
+<h2>Personalization Notes</h2>
+<p class="tip"><strong>Women:</strong> Higher iron needs during menstruating years. Ca/D critical at menopause. Birth control depletes B vitamins, Mg, Zn. Pregnancy increases folate, iron, calcium, omega-3 needs.</p>
+<p class="tip"><strong>Men:</strong> Zinc critical for testosterone—alcohol especially problematic. Iron overload more common than deficiency (test first).</p>
+<p class="tip"><strong>Over 50:</strong> B12 absorption decreases (may need sublingual). Vitamin D production from sun decreases. Stomach acid decreases.</p>
+<p class="tip"><strong>Athletes:</strong> Iron, Mg, K, Zn, B vitamins all used/lost more rapidly. May need above RDA.</p>
+<p class="tip"><strong>Plant-based:</strong> B12 supplementation essential. Iron less bioavailable (pair with C). Zinc needs 50% higher. Consider algae-based EPA/DHA.</p>
+</div>
+
+<div class="no-break">
+<h2>Honest Exceptions</h2>
+<p>Some supplementation may still be warranted:</p>
+<ul>
+    <li><strong>Vitamin D</strong> — If far from equator, work indoors, or have dark skin</li>
+    <li><strong>B12</strong> — If plant-based or over 50</li>
+    <li><strong>Omega-3s</strong> — If you don't eat fatty fish 2-3x per week</li>
+    <li><strong>Magnesium</strong> — If chronic stress, heavy exercise, or poor sleep</li>
+    <li><strong>Iron</strong> — If menstruating, pregnant, or confirmed deficiency (test first)</li>
+</ul>
+<p><em>These should be exceptions, not the rule. Address root causes first.</em></p>
+</div>
+
+<p class="quote">"The supplement industry sells you back what the food industry took away.<br>Subtraction first. Addition only when necessary."</p>
+
+<div class="cross-links">
+    <a href="calculator.html" class="cross-link">Take the Assessment →</a>
+    <a href="tracker.html" class="cross-link">Start Tracking →</a>
+    <a href="bloodwork.html" class="cross-link">Log Bloodwork →</a>
+</div>
+
+<p class="footer">Share freely. Help others escape the loop.</p>
+
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.querySelector('.theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

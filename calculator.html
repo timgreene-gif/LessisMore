@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrient Depletion Risk Calculator</title>
+    <style>
+        :root { --bg: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --accent: #1a5f5f; --border: #e0e0e0; --hover-bg: #f8fafa; --selected-bg: #e8f4f4; }
+        [data-theme="dark"] { --bg: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --accent: #3d9a9a; --border: #444; --hover-bg: #2a2a2a; --selected-bg: #1a3a3a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); min-height: 100vh; padding: 12px; transition: background 0.3s; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); transition: background 0.3s; }
+        @media (max-width: 500px) { .card { padding: 20px 16px; } }
+        h1 { color: var(--accent); text-align: center; margin-bottom: 6px; font-size: 22px; }
+        .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-size: 13px; }
+        .nav-link { display: block; text-align: center; margin-bottom: 12px; color: white; text-decoration: none; font-size: 13px; }
+        .nav-link:hover { text-decoration: underline; }
+        .progress-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 24px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #1a5f5f, #e85a4f); border-radius: 3px; transition: width 0.3s ease; }
+        .question-container { min-height: 280px; }
+        .question { display: none; }
+        .question.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .question h2 { color: var(--text); font-size: 17px; margin-bottom: 6px; line-height: 1.3; }
+        .question-context { color: var(--text-secondary); font-size: 12px; margin-bottom: 16px; }
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .option { padding: 14px 16px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; background: var(--card-bg); }
+        .option:hover { border-color: var(--accent); background: var(--hover-bg); }
+        .option.selected { border-color: var(--accent); background: var(--selected-bg); }
+        .option-marker { width: 22px; height: 22px; border: 2px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #999; flex-shrink: 0; }
+        .option.selected .option-marker { background: var(--accent); border-color: var(--accent); color: white; }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; }
+        .option-text { flex: 1; }
+        .option-label { font-weight: 600; color: #333; font-size: 14px; }
+        .option-detail { font-size: 11px; color: #666; margin-top: 2px; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .btn-secondary { background: #f0f0f0; color: #666; }
+        .btn-primary { background: #1a5f5f; color: white; }
+        .btn-primary:hover { background: #155050; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .results { display: none; }
+        .results.active { display: block; animation: fadeIn 0.3s ease; }
+        .results h2 { color: #1a5f5f; text-align: center; margin-bottom: 20px; font-size: 18px; }
+        .risk-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 8px; margin-bottom: 20px; }
+        .risk-item { padding: 12px 8px; border-radius: 10px; text-align: center; }
+        .risk-item.high { background: #fde8e8; border: 2px solid #e85a4f; }
+        .risk-item.medium { background: #fef3cd; border: 2px solid #f0ad4e; }
+        .risk-item.low { background: #e8f5e8; border: 2px solid #4a7c59; }
+        .risk-item .nutrient { font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+        .risk-item.high .nutrient { color: #c0392b; }
+        .risk-item.medium .nutrient { color: #d68910; }
+        .risk-item.low .nutrient { color: #27ae60; }
+        .risk-item .score { font-size: 18px; font-weight: 700; }
+        .risk-item .level { font-size: 9px; text-transform: uppercase; }
+        .section-title { font-size: 14px; color: #1a5f5f; margin: 20px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #e0e0e0; }
+        .depletion-factors { background: #f8f8f8; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+        .factor { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #e8e8e8; }
+        .factor:last-child { border-bottom: none; }
+        .factor-name { font-weight: 600; color: #333; font-size: 13px; }
+        .factor-impact { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+        .factor-impact.high { background: #fde8e8; color: #c0392b; }
+        .factor-impact.medium { background: #fef3cd; color: #d68910; }
+        .recommendations { background: #e8f4f4; border-radius: 10px; padding: 16px; }
+        .recommendation { display: flex; gap: 10px; margin-bottom: 12px; }
+        .recommendation:last-child { margin-bottom: 0; }
+        .rec-number { width: 24px; height: 24px; background: #1a5f5f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+        .rec-content h4 { color: #1a5f5f; font-size: 13px; margin-bottom: 2px; }
+        .rec-content p { font-size: 12px; color: #555; line-height: 1.4; }
+        .cta-box { background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px; }
+        .cta-box h3 { color: white; font-size: 15px; margin-bottom: 8px; }
+        .cta-box p { color: rgba(255,255,255,0.9); font-size: 12px; margin-bottom: 14px; }
+        .cta-box .btn { background: white; color: #1a5f5f; padding: 12px 24px; }
+        .cta-box .btn:hover { background: #f0f0f0; }
+        .disclaimer { margin-top: 20px; padding: 14px; background: #f8f8f8; border-radius: 8px; font-size: 10px; color: #666; text-align: center; }
+        .action-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+        .btn-outline { background: white; border: 2px solid #1a5f5f; color: #1a5f5f; text-decoration: none; }
+        .intro { text-align: center; }
+        .intro p { color: #555; margin-bottom: 14px; line-height: 1.5; font-size: 14px; }
+        .intro ul { text-align: left; margin: 16px 0; padding-left: 0; list-style: none; }
+        .intro li { padding: 6px 0 6px 24px; position: relative; color: #444; font-size: 13px; }
+        .intro li::before { content: "✓"; position: absolute; left: 0; color: #1a5f5f; font-weight: bold; }
+        .start-btn { margin-top: 20px; padding: 14px 40px; font-size: 16px; }
+        .saved-notice { background: #e8f5e8; color: #27ae60; padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="nav-link">← Back to Dashboard</a>
+        <div class="card">
+            <div id="intro" class="intro">
+                <h1>Nutrient Depletion Risk Calculator</h1>
+                <p class="subtitle">Find out what's stealing your nutrients</p>
+                <p>Your lifestyle, stress, and daily habits can deplete essential nutrients without you realizing it.</p>
+                <ul>
+                    <li>10 quick questions (2 minutes)</li>
+                    <li>Personalized depletion profile</li>
+                    <li>Prioritized action steps</li>
+                    <li>Results saved for your Protocol</li>
+                </ul>
+                <button class="btn btn-primary start-btn" onclick="startQuiz()">Start Assessment</button>
+            </div>
+            <div id="quiz" style="display: none;">
+                <h1>Depletion Risk</h1>
+                <p class="subtitle">Answer honestly for accurate results</p>
+                <div class="progress-bar"><div class="progress-fill" id="progress" style="width: 0%"></div></div>
+                <div class="question-container" id="questionContainer"></div>
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()" disabled>← Back</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>Next →</button>
+                </div>
+            </div>
+            <div id="results" class="results"></div>
+        </div>
+    </div>
+    <script>
+        const questions = [
+            { id: 'sugar', question: 'How much added sugar do you consume daily?', context: 'Sodas, sweets, desserts, sweetened coffee, processed foods.', options: [{ label: 'Very low', detail: 'Almost none - I avoid added sugar', value: 0 }, { label: 'Low', detail: 'Occasional treat, <25g/day', value: 1 }, { label: 'Moderate', detail: 'Daily sweets or sweetened drinks', value: 2 }, { label: 'High', detail: 'Multiple sugary items daily', value: 3 }], depletes: ['magnesium', 'b_vitamins', 'vitamin_c', 'vitamin_d', 'calcium', 'chromium'] },
+            { id: 'caffeine', question: 'How much caffeine do you consume?', context: '1 coffee ≈ 95mg caffeine.', options: [{ label: 'None or minimal', detail: 'Rarely', value: 0 }, { label: '1-2 cups/day', detail: '100-200mg', value: 1 }, { label: '3-4 cups/day', detail: '300-400mg', value: 2 }, { label: '5+ cups/day', detail: '500mg+', value: 3 }], depletes: ['iron', 'calcium', 'vitamin_d', 'magnesium', 'b_vitamins'] },
+            { id: 'caffeine_timing', question: 'When do you drink caffeine relative to meals?', context: 'Timing affects iron and mineral absorption significantly.', options: [{ label: 'Separated', detail: '1+ hour away from meals', value: 0 }, { label: 'Sometimes with food', detail: 'Occasionally with breakfast', value: 1 }, { label: 'Usually with meals', detail: 'Coffee with most meals', value: 2 }, { label: 'Always with meals', detail: 'Every meal has caffeine', value: 3 }], depletes: ['iron', 'zinc', 'calcium'] },
+            { id: 'alcohol', question: 'How much alcohol do you typically drink?', context: '1 drink = 12oz beer, 5oz wine, 1.5oz spirits.', options: [{ label: 'Rarely or never', detail: 'Few drinks/month or less', value: 0 }, { label: 'Light', detail: '1-3 drinks/week', value: 1 }, { label: 'Moderate', detail: '4-7 drinks/week', value: 2 }, { label: 'Heavy', detail: '8+ drinks/week', value: 3 }], depletes: ['b_vitamins', 'magnesium', 'zinc', 'vitamin_c', 'vitamin_d', 'iron', 'calcium', 'potassium'] },
+            { id: 'stress', question: 'How would you rate your chronic stress?', context: 'Work, finances, relationships, caregiving.', options: [{ label: 'Low', detail: 'Generally calm, good balance', value: 0 }, { label: 'Moderate', detail: 'Normal stress, manageable', value: 1 }, { label: 'High', detail: 'Frequent stress, affects sleep', value: 2 }, { label: 'Very high', detail: 'Constant pressure, burnout', value: 3 }], depletes: ['magnesium', 'b_vitamins', 'vitamin_c', 'vitamin_d', 'zinc', 'iron', 'potassium'] },
+            { id: 'sleep', question: 'How much quality sleep do you get?', context: 'Consistent schedule, feeling rested.', options: [{ label: '7-9 hours', detail: 'Consistent, restful', value: 0 }, { label: '6-7 hours', detail: 'Adequate but not optimal', value: 1 }, { label: '5-6 hours', detail: 'Often tired', value: 2 }, { label: '<5 hours', detail: 'Chronic deprivation', value: 3 }], depletes: ['magnesium', 'b_vitamins', 'vitamin_d'] },
+            { id: 'exercise', question: 'How physically active are you?', context: 'Intentional exercise + daily movement.', options: [{ label: 'Very active', detail: '5+ workouts/week', value: 0 }, { label: 'Moderately active', detail: '3-4 workouts/week', value: 1 }, { label: 'Lightly active', detail: '1-2 workouts/week', value: 2 }, { label: 'Sedentary', detail: 'Desk job, minimal exercise', value: 3 }], depletes: ['vitamin_d', 'calcium'] },
+            { id: 'diet', question: 'How would you describe your typical diet?', context: 'What you eat most days.', options: [{ label: 'Whole foods', detail: 'Mostly unprocessed, home-cooked', value: 0 }, { label: 'Mixed', detail: 'Some processed, mostly decent', value: 1 }, { label: 'Convenience-heavy', detail: 'Frequent fast/packaged food', value: 2 }, { label: 'Highly processed', detail: 'Mostly packaged/takeout', value: 3 }], depletes: ['magnesium', 'b_vitamins', 'vitamin_c', 'zinc', 'chromium', 'potassium', 'omega3'] },
+            { id: 'medications', question: 'Do you take any of these regularly?', context: 'Known to affect nutrient levels.', options: [{ label: 'None of these', detail: 'Or occasional use only', value: 0, meds: [] }, { label: 'Antacids/PPIs', detail: 'Omeprazole, Prilosec, Tums', value: 2, meds: ['b_vitamins', 'iron', 'magnesium', 'calcium', 'zinc'] }, { label: 'Metformin or Statins', detail: 'Diabetes or cholesterol', value: 2, meds: ['b_vitamins'] }, { label: 'Birth control or Diuretics', detail: 'Hormonal or BP meds', value: 2, meds: ['b_vitamins', 'magnesium', 'zinc', 'potassium'] }], special: 'medications' },
+            { id: 'fish', question: 'How often do you eat fatty fish?', context: 'Salmon, mackerel, sardines - main omega-3 source.', options: [{ label: '2-3+ times/week', detail: 'Regular intake', value: 0 }, { label: 'Once a week', detail: 'Weekly fish meal', value: 1 }, { label: 'Rarely', detail: 'Few times a month', value: 2 }, { label: 'Never', detail: 'Don\'t eat fish', value: 3 }], depletes: ['omega3'] }
+        ];
+        const nutrients = { magnesium: { name: 'Magnesium', score: 0 }, b_vitamins: { name: 'B Vitamins', score: 0 }, vitamin_c: { name: 'Vitamin C', score: 0 }, vitamin_d: { name: 'Vitamin D', score: 0 }, iron: { name: 'Iron', score: 0 }, zinc: { name: 'Zinc', score: 0 }, calcium: { name: 'Calcium', score: 0 }, chromium: { name: 'Chromium', score: 0 }, potassium: { name: 'Potassium', score: 0 }, omega3: { name: 'Omega-3s', score: 0 } };
+        let currentQuestion = 0;
+        let answers = {};
+        function startQuiz() { document.getElementById('intro').style.display = 'none'; document.getElementById('quiz').style.display = 'block'; renderQuestion(); }
+        function renderQuestion() {
+            const container = document.getElementById('questionContainer');
+            const q = questions[currentQuestion];
+            const savedAnswer = answers[q.id];
+            let optionsHtml = q.options.map((opt, idx) => `<div class="option ${savedAnswer === idx ? 'selected' : ''}" onclick="selectOption(${idx})"><div class="option-marker">${savedAnswer === idx ? '✓' : String.fromCharCode(65 + idx)}</div><div class="option-text"><div class="option-label">${opt.label}</div><div class="option-detail">${opt.detail}</div></div></div>`).join('');
+            container.innerHTML = `<div class="question active"><h2>${q.question}</h2><p class="question-context">${q.context}</p><div class="options">${optionsHtml}</div></div>`;
+            updateProgress(); updateButtons();
+        }
+        function selectOption(idx) { answers[questions[currentQuestion].id] = idx; renderQuestion(); }
+        function updateProgress() { document.getElementById('progress').style.width = ((currentQuestion + 1) / questions.length) * 100 + '%'; }
+        function updateButtons() { document.getElementById('prevBtn').disabled = currentQuestion === 0; document.getElementById('nextBtn').disabled = answers[questions[currentQuestion].id] === undefined; document.getElementById('nextBtn').textContent = currentQuestion === questions.length - 1 ? 'See Results' : 'Next →'; }
+        function prevQuestion() { if (currentQuestion > 0) { currentQuestion--; renderQuestion(); } }
+        function nextQuestion() { if (answers[questions[currentQuestion].id] === undefined) return; if (currentQuestion < questions.length - 1) { currentQuestion++; renderQuestion(); } else { calculateResults(); } }
+        function calculateResults() {
+            Object.keys(nutrients).forEach(k => nutrients[k].score = 0);
+            questions.forEach(q => {
+                const answerIdx = answers[q.id];
+                if (answerIdx === undefined) return;
+                const option = q.options[answerIdx];
+                if (q.special === 'medications' && option.meds) { option.meds.forEach(n => { if (nutrients[n]) nutrients[n].score += 2; }); }
+                else if (q.depletes) { q.depletes.forEach(n => { if (nutrients[n]) nutrients[n].score += option.value; }); }
+            });
+            saveResults();
+            showResults();
+        }
+        function saveResults() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                answers: answers,
+                nutrientScores: Object.fromEntries(Object.entries(nutrients).map(([k, v]) => [k, v.score])),
+                factors: []
+            };
+            const labels = { sugar: 'Sugar', caffeine: 'Caffeine', caffeine_timing: 'Caffeine Timing', alcohol: 'Alcohol', stress: 'Stress', sleep: 'Sleep', exercise: 'Activity', diet: 'Diet', medications: 'Medications', fish: 'Omega-3s' };
+            questions.forEach(q => {
+                const idx = answers[q.id];
+                if (idx !== undefined && q.options[idx].value >= 2) {
+                    results.factors.push({ id: q.id, name: labels[q.id], value: q.options[idx].value });
+                }
+            });
+            localStorage.setItem('calculator_results', JSON.stringify(results));
+        }
+        function showResults() {
+            document.getElementById('quiz').style.display = 'none';
+            document.getElementById('results').classList.add('active');
+            const sorted = Object.entries(nutrients).map(([key, val]) => ({ key, ...val })).sort((a, b) => b.score - a.score);
+            const getRiskLevel = (score) => score >= 8 ? 'high' : score >= 4 ? 'medium' : 'low';
+            const riskHtml = sorted.map(n => { const level = getRiskLevel(n.score); return `<div class="risk-item ${level}"><div class="nutrient">${n.name}</div><div class="score">${n.score}</div><div class="level">${level}</div></div>`; }).join('');
+            const factors = [];
+            const labels = { sugar: 'Sugar', caffeine: 'Caffeine', caffeine_timing: 'Caffeine Timing', alcohol: 'Alcohol', stress: 'Stress', sleep: 'Sleep', exercise: 'Activity', diet: 'Diet', medications: 'Medications', fish: 'Omega-3s' };
+            questions.forEach(q => { const idx = answers[q.id]; if (idx !== undefined && q.options[idx].value >= 2) { factors.push({ name: labels[q.id], impact: q.options[idx].value >= 3 ? 'high' : 'medium' }); } });
+            const factorsHtml = factors.length > 0 ? factors.map(f => `<div class="factor"><span class="factor-name">${f.name}</span><span class="factor-impact ${f.impact}">${f.impact}</span></div>`).join('') : '<p style="color:#666;text-align:center;padding:10px;">No major factors. Nice work!</p>';
+            const recs = [];
+            if (answers.sugar >= 2) recs.push({ title: 'Cut Added Sugar', text: 'Highest leverage. Addresses 6+ nutrients at once.' });
+            if (answers.caffeine_timing >= 2) recs.push({ title: 'Fix Caffeine Timing', text: 'Move coffee 1 hour away from meals. Protects iron, zinc, calcium.' });
+            if (answers.stress >= 2) recs.push({ title: 'Address Stress', text: 'Stress doubles magnesium needs. Focus on sleep and boundaries.' });
+            if (answers.sleep >= 2) recs.push({ title: 'Prioritize Sleep', text: '7+ hours. Depleted sleep = depleted nutrients.' });
+            if (answers.fish >= 2) recs.push({ title: 'Add Omega-3s', text: 'Fatty fish 2x/week or quality fish oil.' });
+            if (recs.length === 0) recs.push({ title: 'Maintain Foundation', text: 'Your factors look solid. Stay consistent.' });
+            const recsHtml = recs.slice(0, 4).map((r, i) => `<div class="recommendation"><div class="rec-number">${i + 1}</div><div class="rec-content"><h4>${r.title}</h4><p>${r.text}</p></div></div>`).join('');
+            const suggestedHabits = [];
+            if (answers.sugar >= 2) suggestedHabits.push('no_sugar');
+            if (answers.caffeine_timing >= 2) suggestedHabits.push('caffeine_timing');
+            if (answers.sleep >= 2) suggestedHabits.push('sleep_7');
+            if (answers.exercise >= 2) suggestedHabits.push('movement');
+            if (answers.diet >= 2) suggestedHabits.push('whole_foods');
+            const trackerUrl = suggestedHabits.length > 0 ? `tracker.html?focus=${suggestedHabits.join(',')}` : 'tracker.html';
+            document.getElementById('results').innerHTML = `
+                <div class="saved-notice">✓ Results saved to your profile</div>
+                <h2>Your Depletion Risk Profile</h2>
+                <div class="risk-summary">${riskHtml}</div>
+                <h3 class="section-title">Your Top Depletion Factors</h3>
+                <div class="depletion-factors">${factorsHtml}</div>
+                <h3 class="section-title">Priority Actions</h3>
+                <div class="recommendations">${recsHtml}</div>
+                <div class="cta-box">
+                    <h3>Generate Your Full Protocol</h3>
+                    <p>Get a personalized 30-day action plan based on your results.</p>
+                    <a href="protocol.html" class="btn">Generate Protocol →</a>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-outline" onclick="restartQuiz()">Retake</button>
+                    <a href="${trackerUrl}" class="btn btn-outline">Habit Tracker</a>
+                    <a href="symptoms.html" class="btn btn-outline">Add Symptoms</a>
+                </div>
+                <div class="disclaimer"><strong>Disclaimer:</strong> Educational purposes only. Scores indicate relative risk, not confirmed deficiencies.</div>`;
+        }
+        function restartQuiz() { currentQuestion = 0; answers = {}; Object.keys(nutrients).forEach(k => nutrients[k].score = 0); document.getElementById('results').classList.remove('active'); document.getElementById('results').innerHTML = ''; document.getElementById('intro').style.display = 'block'; }
+        
+        // Theme
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.addEventListener('DOMContentLoaded', () => document.querySelector('.theme-toggle').textContent = '☀️');
+        }
+    </script>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+</body>
+</html>

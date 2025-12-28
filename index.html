@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subtraction Health Dashboard</title>
+    <meta name="description" content="Track nutrient depletions, symptoms, medications, and build your personalized health protocol">
+    <meta name="theme-color" content="#1a5f5f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nutrients">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231a5f5f' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🥬</text></svg>">
+    <style>
+        :root {
+            --bg-primary: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 50%, #1a5f5f 100%);
+            --bg-card: white;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --accent: #1a5f5f;
+            --accent-light: #e8f4f4;
+            --border: #e0e0e0;
+            --shadow: rgba(0,0,0,0.15);
+            --tag-bg: #f5f5f5;
+        }
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 50%, #0d2f2f 100%);
+            --bg-card: #1e1e1e;
+            --text-primary: #e8e8e8;
+            --text-secondary: #aaa;
+            --text-muted: #777;
+            --accent: #3d9a9a;
+            --accent-light: #1a3a3a;
+            --border: #333;
+            --shadow: rgba(0,0,0,0.4);
+            --tag-bg: #2a2a2a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-primary); min-height: 100vh; padding: 16px; transition: background 0.3s; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { text-align: center; color: white; padding: 30px 16px 10px; }
+        header h1 { font-size: 28px; margin-bottom: 6px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        @media (max-width: 500px) { header h1 { font-size: 24px; } }
+        header .tagline { font-size: 16px; opacity: 0.9; margin-bottom: 12px; }
+        header .philosophy { max-width: 550px; margin: 0 auto; font-size: 13px; line-height: 1.5; opacity: 0.85; }
+        .section-title { color: white; text-align: center; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin: 28px 0 12px; opacity: 0.7; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        .card { background: var(--bg-card); border-radius: 14px; padding: 18px; box-shadow: 0 8px 30px var(--shadow); transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s; text-decoration: none; color: inherit; display: block; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px var(--shadow); }
+        .card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+        .card-icon.learn { background: var(--accent-light); }
+        .card-icon.calculate { background: #fef3cd; }
+        .card-icon.track { background: #e8f5e8; }
+        .card-icon.measure { background: #fde8e8; }
+        .card-icon.shop { background: #f0e8f4; }
+        .card-icon.symptoms { background: #fff3e8; }
+        .card-icon.meds { background: #f3e8ff; }
+        [data-theme="dark"] .card-icon.calculate { background: #4a3d1a; }
+        [data-theme="dark"] .card-icon.track { background: #1a3d1a; }
+        [data-theme="dark"] .card-icon.measure { background: #3d1a1a; }
+        [data-theme="dark"] .card-icon.shop { background: #2a1a3d; }
+        [data-theme="dark"] .card-icon.symptoms { background: #3d2a1a; }
+        [data-theme="dark"] .card-icon.meds { background: #2a1a3d; }
+        .card-icon.protocol { background: linear-gradient(135deg, #1a5f5f, #2d8a8a); }
+        .card h2 { font-size: 15px; color: var(--accent); margin-bottom: 4px; }
+        .card p { font-size: 11px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 8px; }
+        .card-link { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--accent); }
+        .card-link::after { content: "→"; transition: transform 0.2s; }
+        .card:hover .card-link::after { transform: translateX(4px); }
+        .features { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+        .feature-tag { font-size: 9px; padding: 2px 6px; background: var(--tag-bg); border-radius: 10px; color: var(--text-secondary); }
+        .card.featured { border: 2px solid rgba(232, 90, 79, 0.4); }
+        .featured-badge { font-size: 8px; background: #e85a4f; color: white; padding: 2px 6px; border-radius: 8px; margin-left: 6px; font-weight: 600; }
+        .capstone-card { grid-column: 1 / -1; background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); color: white; display: flex; align-items: center; gap: 20px; padding: 24px; }
+        @media (max-width: 600px) { .capstone-card { flex-direction: column; text-align: center; } }
+        .capstone-card .card-icon { background: rgba(255,255,255,0.2); width: 56px; height: 56px; font-size: 28px; flex-shrink: 0; }
+        .capstone-card h2 { color: white; font-size: 18px; margin-bottom: 6px; }
+        .capstone-card p { color: rgba(255,255,255,0.9); font-size: 13px; margin-bottom: 10px; }
+        .capstone-card .card-link { color: white; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
+        .capstone-card .card-link:hover { background: rgba(255,255,255,0.3); }
+        .capstone-card .card-link::after { content: "→"; margin-left: 6px; }
+        .quote-section { text-align: center; padding: 24px 16px; color: white; }
+        .quote { font-size: 14px; font-style: italic; max-width: 480px; margin: 0 auto 12px auto; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .privacy-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 20px; font-size: 11px; }
+        footer { text-align: center; color: white; padding: 16px; font-size: 11px; opacity: 0.8; }
+        .theme-toggle { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 20px; cursor: pointer; z-index: 1000; transition: all 0.3s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        .install-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 20px var(--shadow); display: none; align-items: center; gap: 12px; z-index: 1000; }
+        .install-prompt.show { display: flex; }
+        .install-prompt button { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 12px; }
+        .install-btn { background: var(--accent); color: white; }
+        .dismiss-btn { background: var(--tag-bg); color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Subtraction Health</h1>
+            <p class="tagline">Stop Taking. Start Removing.</p>
+            <p class="philosophy">The supplement industry sells you back what the food industry took away. Fix the root cause first.</p>
+        </header>
+        
+        <p class="section-title">Understand Your Situation</p>
+        <div class="dashboard-grid">
+            <a href="subtraction_supplement_guide.html" class="card">
+                <div class="card-icon learn">📖</div>
+                <h2>The Guide</h2>
+                <p>Complete guide to what depletes what and how to fix it.</p>
+                <div class="features"><span class="feature-tag">9 Nutrients</span><span class="feature-tag">Medications</span><span class="feature-tag">Foods</span></div>
+                <span class="card-link">Read Guide</span>
+            </a>
+            <a href="calculator.html" class="card">
+                <div class="card-icon calculate">🎯</div>
+                <h2>Risk Calculator</h2>
+                <p>2-minute lifestyle assessment. Get your depletion risk profile.</p>
+                <div class="features"><span class="feature-tag">10 Questions</span><span class="feature-tag">Risk Profile</span></div>
+                <span class="card-link">Take Assessment</span>
+            </a>
+            <a href="symptoms.html" class="card">
+                <div class="card-icon symptoms">🩺</div>
+                <h2>Symptom Mapper</h2>
+                <p>Select symptoms. See which deficiencies might be causing them.</p>
+                <div class="features"><span class="feature-tag">30+ Symptoms</span><span class="feature-tag">Test Recs</span></div>
+                <span class="card-link">Map Symptoms</span>
+            </a>
+            <a href="medications.html" class="card">
+                <div class="card-icon meds">💊</div>
+                <h2>Medication Lookup</h2>
+                <p>Enter your meds. See which nutrients they deplete.</p>
+                <div class="features"><span class="feature-tag">50+ Drugs</span><span class="feature-tag">Depletions</span></div>
+                <span class="card-link">Check Medications</span>
+            </a>
+        </div>
+        
+        <p class="section-title">Take Action</p>
+        <div class="dashboard-grid">
+            <a href="tracker.html" class="card">
+                <div class="card-icon track">✓</div>
+                <h2>Habit Tracker</h2>
+                <p>Track the daily habits that protect your nutrients.</p>
+                <div class="features"><span class="feature-tag">5 Habits</span><span class="feature-tag">Streaks</span></div>
+                <span class="card-link">Start Tracking</span>
+            </a>
+            <a href="shopping.html" class="card">
+                <div class="card-icon shop">🛒</div>
+                <h2>Shopping List</h2>
+                <p>Foods that hit multiple nutrients. The power foods.</p>
+                <div class="features"><span class="feature-tag">30+ Foods</span><span class="feature-tag">Meal Ideas</span></div>
+                <span class="card-link">View List</span>
+            </a>
+            <a href="bloodwork.html" class="card">
+                <div class="card-icon measure">🔬</div>
+                <h2>Bloodwork Log</h2>
+                <p>Reference ranges, log results, track trends over time.</p>
+                <div class="features"><span class="feature-tag">12 Markers</span><span class="feature-tag">Trends</span></div>
+                <span class="card-link">Log Results</span>
+            </a>
+        </div>
+        
+        <p class="section-title">Your Protocol</p>
+        <div class="dashboard-grid">
+            <a href="protocol.html" class="card capstone-card">
+                <div class="card-icon protocol">📋</div>
+                <div>
+                    <h2>Generate Your Protocol <span class="featured-badge">CAPSTONE</span></h2>
+                    <p>Combines everything—calculator, symptoms, bloodwork, habits—into one personalized 30-day action plan. Print it. Follow it. Fix the root cause.</p>
+                    <span class="card-link">Generate My Protocol</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="quote-section">
+            <p class="quote">"Remove sugar alone and you address 6+ deficiencies. That's the power of subtraction."</p>
+            <div class="privacy-badge">🔒 100% Private — All data stays in your browser</div>
+        </div>
+        
+        <footer>
+            <p>No accounts. No tracking. No data collection. Just tools that work.</p>
+        </footer>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+        
+        <div class="install-prompt" id="installPrompt">
+            <span style="font-size: 13px; color: var(--text-primary);">📱 Install app?</span>
+            <button class="install-btn" onclick="installApp()">Install</button>
+            <button class="dismiss-btn" onclick="dismissInstall()">Not now</button>
+        </div>
+    </div>
+    
+    <script>
+        // Dark mode
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateToggleIcon(next);
+        }
+        
+        function updateToggleIcon(theme) {
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            updateToggleIcon('dark');
+        }
+        
+        // PWA Install
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!localStorage.getItem('installDismissed')) {
+                document.getElementById('installPrompt').classList.add('show');
+            }
+        });
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').classList.remove('show');
+                });
+            }
+        }
+        
+        function dismissInstall() {
+            document.getElementById('installPrompt').classList.remove('show');
+            localStorage.setItem('installDismissed', 'true');
+        }
+        
+        // Register service worker (only on real hosting, not preview environments)
+        if ('serviceWorker' in navigator && !location.hostname.includes('claudeusercontent')) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed:', err));
+        }
+    </script>
+</body>
+</html>

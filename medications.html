@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Nutrient Lookup</title>
+    <style>
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); min-height: 100vh; padding: 12px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); color: white; padding: 24px; border-radius: 16px; margin-bottom: 16px; text-align: center; }
+        header h1 { font-size: 24px; margin-bottom: 6px; }
+        header p { opacity: 0.9; font-size: 14px; max-width: 500px; margin: 0 auto; }
+        .nav-link { display: inline-block; margin-top: 12px; color: white; opacity: 0.9; text-decoration: none; font-size: 12px; }
+        .nav-link:hover { opacity: 1; text-decoration: underline; }
+        
+        .card { background: var(--card-bg); border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+        .card h2 { color: #8e44ad; font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .card-intro { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5; }
+        
+        /* Search */
+        .search-container { position: relative; margin-bottom: 20px; }
+        .search-input { width: 100%; padding: 14px 18px; font-size: 15px; border: 2px solid var(--border); border-radius: 12px; outline: none; transition: all 0.2s; }
+        .search-input:focus { border-color: #8e44ad; box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1); }
+        .search-input::placeholder { color: #aaa; }
+        .search-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #aaa; }
+        
+        /* Autocomplete Dropdown */
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 2px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; max-height: 300px; overflow-y: auto; z-index: 100; display: none; }
+        .autocomplete-list.show { display: block; }
+        .autocomplete-item { padding: 12px 18px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        .autocomplete-item:hover, .autocomplete-item.highlighted { background: #f8f4fc; }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-name { font-weight: 600; color: var(--text); font-size: 14px; }
+        .autocomplete-brands { font-size: 11px; color: #888; margin-top: 2px; }
+        .autocomplete-class { font-size: 10px; color: #8e44ad; background: #f8f4fc; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 4px; }
+        
+        /* Drug Classes Browse */
+        .browse-section { margin-bottom: 20px; }
+        .browse-header { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
+        .class-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .class-chip { padding: 8px 14px; font-size: 12px; background: #f0f0f0; border: none; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+        .class-chip:hover { background: #e0e0e0; }
+        .class-chip.active { background: #8e44ad; color: white; }
+        
+        /* Selected Medications */
+        .selected-section { margin-bottom: 20px; }
+        .selected-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .selected-title { font-size: 14px; font-weight: 600; color: var(--text); }
+        .clear-all { font-size: 11px; color: #e74c3c; cursor: pointer; text-decoration: underline; background: none; border: none; }
+        .selected-meds { display: flex; flex-wrap: wrap; gap: 8px; }
+        .selected-med { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8f4fc; border: 1px solid #e8dff0; border-radius: 10px; }
+        .selected-med-name { font-size: 13px; font-weight: 500; color: var(--text); }
+        .selected-med-remove { width: 20px; height: 20px; border-radius: 50%; background: #e74c3c; color: white; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .selected-med-remove:hover { background: #c0392b; }
+        .no-meds { font-size: 13px; color: #888; font-style: italic; }
+        
+        /* Results */
+        .results-section { display: none; }
+        .results-section.show { display: block; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; }
+        .results-title { font-size: 16px; font-weight: 700; color: var(--text); }
+        .results-count { font-size: 12px; color: #888; }
+        
+        /* Depletion Cards */
+        .depletion-grid { display: grid; gap: 12px; }
+        .depletion-card { background: #fafafa; border-radius: 12px; padding: 16px; border-left: 4px solid #8e44ad; }
+        .depletion-card.high { border-left-color: #e74c3c; background: #fef5f5; }
+        .depletion-card.medium { border-left-color: #f39c12; background: #fffbf0; }
+        .depletion-card.low { border-left-color: #3498db; background: #f5f9fc; }
+        .depletion-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .depletion-nutrient { font-size: 16px; font-weight: 700; color: var(--text); }
+        .depletion-severity { font-size: 10px; padding: 4px 10px; border-radius: 12px; font-weight: 600; text-transform: uppercase; }
+        .depletion-card.high .depletion-severity { background: #fde8e8; color: #c0392b; }
+        .depletion-card.medium .depletion-severity { background: #fef3cd; color: #856404; }
+        .depletion-card.low .depletion-severity { background: #d6eaf8; color: #2874a6; }
+        .depletion-sources { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
+        .depletion-sources strong { color: var(--text); }
+        .depletion-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .depletion-detail { font-size: 12px; }
+        .depletion-detail-label { font-weight: 600; color: #888; font-size: 10px; text-transform: uppercase; margin-bottom: 4px; }
+        .depletion-detail-value { color: var(--text); line-height: 1.4; }
+        .depletion-foods { display: flex; flex-wrap: wrap; gap: 4px; }
+        .food-tag { font-size: 10px; padding: 3px 8px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; color: #555; }
+        
+        /* Summary Panel */
+        .summary-panel { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); color: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .summary-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; opacity: 0.9; }
+        .summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; text-align: center; }
+        .summary-stat-value { font-size: 28px; font-weight: 700; }
+        .summary-stat-label { font-size: 11px; opacity: 0.8; }
+        
+        /* Actions */
+        .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #8e44ad; color: white; }
+        .btn-primary:hover { background: #7d3c98; }
+        .btn-secondary { background: #f0f0f0; color: var(--text-secondary); }
+        .btn-secondary:hover { background: #e5e5e5; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #219a52; }
+        
+        /* Status Message */
+        .status-message { text-align: center; padding: 12px; background: #d4edda; color: #155724; border-radius: 10px; margin-bottom: 16px; font-size: 13px; display: none; }
+        .status-message.show { display: block; }
+        
+        /* Disclaimer */
+        .disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+        .disclaimer-title { font-size: 12px; font-weight: 600; color: #856404; margin-bottom: 4px; }
+        .disclaimer-text { font-size: 11px; color: #856404; line-height: 1.5; }
+        
+        .cross-links { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .cross-link { background: var(--card-bg); padding: 10px 16px; border-radius: 10px; text-decoration: none; color: #8e44ad; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        @media (max-width: 600px) {
+            .summary-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .summary-stat-value { font-size: 22px; }
+            .depletion-details { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💊 Medication Nutrient Lookup</h1>
+            <p>Many common medications deplete essential nutrients. Enter your medications to see what you might need to replenish.</p>
+            <a href="index.html" class="nav-link">← Back to Dashboard</a>
+        </header>
+        
+        <div class="disclaimer">
+            <div class="disclaimer-title">⚠️ Important Disclaimer</div>
+            <div class="disclaimer-text">This tool provides general educational information only. It is not medical advice. Always consult your doctor or pharmacist before making changes to your diet or supplements, especially while taking medications. Some nutrients can interact with medications.</div>
+        </div>
+        
+        <div class="status-message" id="statusMessage">✓ Results saved to your profile</div>
+        
+        <div class="card">
+            <h2>🔍 Find Your Medications</h2>
+            <p class="card-intro">Search by generic name, brand name, or browse by drug class.</p>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="Start typing a medication name..." autocomplete="off">
+                <span class="search-icon">🔍</span>
+                <div class="autocomplete-list" id="autocompleteList"></div>
+            </div>
+            
+            <div class="browse-section">
+                <div class="browse-header">Or browse by category:</div>
+                <div class="class-chips" id="classChips"></div>
+            </div>
+            
+            <div class="selected-section">
+                <div class="selected-header">
+                    <span class="selected-title">Your Medications:</span>
+                    <button class="clear-all" id="clearAll" style="display: none;">Clear All</button>
+                </div>
+                <div class="selected-meds" id="selectedMeds">
+                    <span class="no-meds">No medications selected yet</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results-section" id="resultsSection">
+            <div class="summary-panel">
+                <div class="summary-title">Nutrient Depletion Summary</div>
+                <div class="summary-stats">
+                    <div>
+                        <div class="summary-stat-value" id="highCount">0</div>
+                        <div class="summary-stat-label">High Priority</div>
+                    </div>
+                    <div>
+                        <div class="summary-stat-value" id="mediumCount">0</div>
+                        <div class="summary-stat-label">Moderate</div>
+                    </div>
+                    <div>
+                        <div class="summary-stat-value" id="totalCount">0</div>
+                        <div class="summary-stat-label">Total Nutrients</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="results-header">
+                    <span class="results-title">Nutrients to Watch</span>
+                    <span class="results-count" id="resultsCount"></span>
+                </div>
+                <div class="depletion-grid" id="depletionGrid"></div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-success" onclick="saveResults()">💾 Save to My Profile</button>
+                <a href="protocol.html" class="btn btn-primary">📋 Generate Protocol</a>
+                <a href="shopping.html" class="btn btn-secondary">🛒 Food Sources</a>
+            </div>
+        </div>
+        
+        <div class="cross-links">
+            <a href="protocol.html" class="cross-link">📋 My Protocol</a>
+            <a href="calculator.html" class="cross-link">📊 Risk Calculator</a>
+            <a href="symptoms.html" class="cross-link">🩺 Symptom Mapper</a>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive medication database
+        const medications = [
+            // STATINS
+            { id: 'atorvastatin', generic: 'Atorvastatin', brands: ['Lipitor'], class: 'Statins', depletions: ['coq10', 'vitamin_d', 'vitamin_e'] },
+            { id: 'simvastatin', generic: 'Simvastatin', brands: ['Zocor'], class: 'Statins', depletions: ['coq10', 'vitamin_d', 'vitamin_e'] },
+            { id: 'rosuvastatin', generic: 'Rosuvastatin', brands: ['Crestor'], class: 'Statins', depletions: ['coq10', 'vitamin_d', 'vitamin_e'] },
+            { id: 'pravastatin', generic: 'Pravastatin', brands: ['Pravachol'], class: 'Statins', depletions: ['coq10', 'vitamin_d'] },
+            { id: 'lovastatin', generic: 'Lovastatin', brands: ['Mevacor', 'Altoprev'], class: 'Statins', depletions: ['coq10', 'vitamin_d'] },
+            
+            // PPIs (Proton Pump Inhibitors)
+            { id: 'omeprazole', generic: 'Omeprazole', brands: ['Prilosec', 'Zegerid'], class: 'PPIs / Antacids', depletions: ['b12', 'magnesium', 'calcium', 'iron', 'zinc', 'vitamin_c'] },
+            { id: 'esomeprazole', generic: 'Esomeprazole', brands: ['Nexium'], class: 'PPIs / Antacids', depletions: ['b12', 'magnesium', 'calcium', 'iron', 'zinc', 'vitamin_c'] },
+            { id: 'pantoprazole', generic: 'Pantoprazole', brands: ['Protonix'], class: 'PPIs / Antacids', depletions: ['b12', 'magnesium', 'calcium', 'iron', 'zinc'] },
+            { id: 'lansoprazole', generic: 'Lansoprazole', brands: ['Prevacid'], class: 'PPIs / Antacids', depletions: ['b12', 'magnesium', 'calcium', 'iron', 'zinc'] },
+            { id: 'rabeprazole', generic: 'Rabeprazole', brands: ['Aciphex'], class: 'PPIs / Antacids', depletions: ['b12', 'magnesium', 'calcium', 'iron'] },
+            
+            // H2 Blockers
+            { id: 'famotidine', generic: 'Famotidine', brands: ['Pepcid'], class: 'PPIs / Antacids', depletions: ['b12', 'folate', 'iron', 'zinc', 'calcium'] },
+            { id: 'ranitidine', generic: 'Ranitidine', brands: ['Zantac'], class: 'PPIs / Antacids', depletions: ['b12', 'folate', 'iron', 'zinc'] },
+            
+            // DIABETES
+            { id: 'metformin', generic: 'Metformin', brands: ['Glucophage', 'Fortamet', 'Glumetza'], class: 'Diabetes', depletions: ['b12', 'folate', 'coq10'] },
+            { id: 'glipizide', generic: 'Glipizide', brands: ['Glucotrol'], class: 'Diabetes', depletions: ['coq10'] },
+            { id: 'glyburide', generic: 'Glyburide', brands: ['Diabeta', 'Micronase'], class: 'Diabetes', depletions: ['coq10'] },
+            
+            // BIRTH CONTROL / HORMONE
+            { id: 'oral_contraceptives', generic: 'Oral Contraceptives', brands: ['Various birth control pills'], class: 'Hormones', depletions: ['b6', 'b12', 'folate', 'magnesium', 'zinc', 'vitamin_c', 'selenium'] },
+            { id: 'estrogen_hrt', generic: 'Estrogen (HRT)', brands: ['Premarin', 'Estrace'], class: 'Hormones', depletions: ['b6', 'magnesium', 'zinc'] },
+            
+            // BLOOD PRESSURE - Diuretics
+            { id: 'hydrochlorothiazide', generic: 'Hydrochlorothiazide', brands: ['Microzide', 'HCTZ'], class: 'Blood Pressure', depletions: ['potassium', 'magnesium', 'zinc', 'coq10', 'sodium'] },
+            { id: 'furosemide', generic: 'Furosemide', brands: ['Lasix'], class: 'Blood Pressure', depletions: ['potassium', 'magnesium', 'calcium', 'zinc', 'b1', 'vitamin_c'] },
+            { id: 'spironolactone', generic: 'Spironolactone', brands: ['Aldactone'], class: 'Blood Pressure', depletions: ['sodium', 'folate'] },
+            { id: 'chlorthalidone', generic: 'Chlorthalidone', brands: ['Thalitone'], class: 'Blood Pressure', depletions: ['potassium', 'magnesium', 'zinc', 'coq10'] },
+            
+            // Blood Pressure - ACE Inhibitors
+            { id: 'lisinopril', generic: 'Lisinopril', brands: ['Zestril', 'Prinivil'], class: 'Blood Pressure', depletions: ['zinc'] },
+            { id: 'enalapril', generic: 'Enalapril', brands: ['Vasotec'], class: 'Blood Pressure', depletions: ['zinc'] },
+            { id: 'ramipril', generic: 'Ramipril', brands: ['Altace'], class: 'Blood Pressure', depletions: ['zinc'] },
+            
+            // Blood Pressure - Beta Blockers
+            { id: 'metoprolol', generic: 'Metoprolol', brands: ['Lopressor', 'Toprol XL'], class: 'Blood Pressure', depletions: ['coq10', 'melatonin'] },
+            { id: 'atenolol', generic: 'Atenolol', brands: ['Tenormin'], class: 'Blood Pressure', depletions: ['coq10', 'melatonin'] },
+            { id: 'propranolol', generic: 'Propranolol', brands: ['Inderal'], class: 'Blood Pressure', depletions: ['coq10', 'melatonin'] },
+            { id: 'carvedilol', generic: 'Carvedilol', brands: ['Coreg'], class: 'Blood Pressure', depletions: ['coq10'] },
+            
+            // CORTICOSTEROIDS
+            { id: 'prednisone', generic: 'Prednisone', brands: ['Deltasone', 'Rayos'], class: 'Corticosteroids', depletions: ['calcium', 'vitamin_d', 'potassium', 'magnesium', 'zinc', 'vitamin_c', 'b6', 'folate'] },
+            { id: 'methylprednisolone', generic: 'Methylprednisolone', brands: ['Medrol'], class: 'Corticosteroids', depletions: ['calcium', 'vitamin_d', 'potassium', 'magnesium', 'zinc', 'vitamin_c'] },
+            { id: 'hydrocortisone', generic: 'Hydrocortisone', brands: ['Cortef'], class: 'Corticosteroids', depletions: ['calcium', 'vitamin_d', 'potassium', 'zinc'] },
+            { id: 'budesonide', generic: 'Budesonide', brands: ['Entocort', 'Pulmicort'], class: 'Corticosteroids', depletions: ['calcium', 'vitamin_d'] },
+            
+            // ANTIBIOTICS
+            { id: 'amoxicillin', generic: 'Amoxicillin', brands: ['Amoxil'], class: 'Antibiotics', depletions: ['probiotics', 'b_vitamins', 'vitamin_k'] },
+            { id: 'azithromycin', generic: 'Azithromycin', brands: ['Zithromax', 'Z-Pack'], class: 'Antibiotics', depletions: ['probiotics', 'b_vitamins', 'vitamin_k'] },
+            { id: 'ciprofloxacin', generic: 'Ciprofloxacin', brands: ['Cipro'], class: 'Antibiotics', depletions: ['probiotics', 'b_vitamins', 'magnesium', 'iron', 'zinc'] },
+            { id: 'doxycycline', generic: 'Doxycycline', brands: ['Vibramycin'], class: 'Antibiotics', depletions: ['probiotics', 'b_vitamins', 'calcium', 'magnesium', 'iron'] },
+            { id: 'metronidazole', generic: 'Metronidazole', brands: ['Flagyl'], class: 'Antibiotics', depletions: ['probiotics', 'b_vitamins'] },
+            
+            // ANTIDEPRESSANTS
+            { id: 'sertraline', generic: 'Sertraline', brands: ['Zoloft'], class: 'Antidepressants', depletions: ['folate', 'b6', 'b12', 'sodium'] },
+            { id: 'fluoxetine', generic: 'Fluoxetine', brands: ['Prozac'], class: 'Antidepressants', depletions: ['folate', 'b6', 'b12', 'melatonin'] },
+            { id: 'escitalopram', generic: 'Escitalopram', brands: ['Lexapro'], class: 'Antidepressants', depletions: ['folate', 'b6', 'b12'] },
+            { id: 'paroxetine', generic: 'Paroxetine', brands: ['Paxil'], class: 'Antidepressants', depletions: ['folate', 'b6', 'b12'] },
+            { id: 'duloxetine', generic: 'Duloxetine', brands: ['Cymbalta'], class: 'Antidepressants', depletions: ['folate', 'b6', 'b12'] },
+            { id: 'bupropion', generic: 'Bupropion', brands: ['Wellbutrin'], class: 'Antidepressants', depletions: ['b6'] },
+            { id: 'amitriptyline', generic: 'Amitriptyline', brands: ['Elavil'], class: 'Antidepressants', depletions: ['coq10', 'b2', 'b6'] },
+            
+            // PAIN / NSAIDs
+            { id: 'ibuprofen', generic: 'Ibuprofen', brands: ['Advil', 'Motrin'], class: 'Pain / NSAIDs', depletions: ['folate', 'vitamin_c', 'iron'] },
+            { id: 'naproxen', generic: 'Naproxen', brands: ['Aleve', 'Naprosyn'], class: 'Pain / NSAIDs', depletions: ['folate', 'vitamin_c', 'iron'] },
+            { id: 'aspirin', generic: 'Aspirin', brands: ['Bayer', 'Bufferin'], class: 'Pain / NSAIDs', depletions: ['vitamin_c', 'folate', 'iron', 'potassium', 'zinc'] },
+            { id: 'celecoxib', generic: 'Celecoxib', brands: ['Celebrex'], class: 'Pain / NSAIDs', depletions: ['folate', 'vitamin_c'] },
+            
+            // THYROID
+            { id: 'levothyroxine', generic: 'Levothyroxine', brands: ['Synthroid', 'Levoxyl'], class: 'Thyroid', depletions: ['calcium_note'] },
+            
+            // SEIZURE / MOOD STABILIZERS
+            { id: 'phenytoin', generic: 'Phenytoin', brands: ['Dilantin'], class: 'Seizure / Mood', depletions: ['vitamin_d', 'calcium', 'folate', 'b12', 'vitamin_k'] },
+            { id: 'carbamazepine', generic: 'Carbamazepine', brands: ['Tegretol'], class: 'Seizure / Mood', depletions: ['vitamin_d', 'calcium', 'folate', 'b12', 'biotin'] },
+            { id: 'valproic_acid', generic: 'Valproic Acid', brands: ['Depakote', 'Depakene'], class: 'Seizure / Mood', depletions: ['folate', 'carnitine', 'zinc', 'selenium'] },
+            { id: 'gabapentin', generic: 'Gabapentin', brands: ['Neurontin'], class: 'Seizure / Mood', depletions: ['vitamin_d', 'folate'] },
+            { id: 'topiramate', generic: 'Topiramate', brands: ['Topamax'], class: 'Seizure / Mood', depletions: ['vitamin_d', 'folate'] },
+            { id: 'lamotrigine', generic: 'Lamotrigine', brands: ['Lamictal'], class: 'Seizure / Mood', depletions: ['folate', 'vitamin_d'] },
+            
+            // CHOLESTEROL (Non-Statin)
+            { id: 'cholestyramine', generic: 'Cholestyramine', brands: ['Questran'], class: 'Cholesterol', depletions: ['vitamin_a', 'vitamin_d', 'vitamin_e', 'vitamin_k', 'folate', 'iron'] },
+            { id: 'colesevelam', generic: 'Colesevelam', brands: ['Welchol'], class: 'Cholesterol', depletions: ['vitamin_a', 'vitamin_d', 'vitamin_e', 'vitamin_k'] },
+            
+            // GOUT
+            { id: 'colchicine', generic: 'Colchicine', brands: ['Colcrys'], class: 'Gout', depletions: ['b12', 'potassium'] },
+            { id: 'allopurinol', generic: 'Allopurinol', brands: ['Zyloprim'], class: 'Gout', depletions: ['iron'] }
+        ];
+
+        // Nutrient details database
+        const nutrients = {
+            'b12': { name: 'Vitamin B12', severity: 'high', symptoms: 'Fatigue, weakness, memory issues, numbness/tingling', foods: ['Beef liver', 'Clams', 'Sardines', 'Salmon', 'Eggs'], test: 'Serum B12, MMA' },
+            'magnesium': { name: 'Magnesium', severity: 'high', symptoms: 'Muscle cramps, anxiety, poor sleep, fatigue', foods: ['Pumpkin seeds', 'Spinach', 'Dark chocolate', 'Almonds'], test: 'RBC Magnesium' },
+            'coq10': { name: 'CoQ10', severity: 'high', symptoms: 'Muscle pain/weakness, fatigue, brain fog', foods: ['Organ meats', 'Beef', 'Sardines', 'Spinach'], test: 'CoQ10 blood level' },
+            'vitamin_d': { name: 'Vitamin D', severity: 'high', symptoms: 'Fatigue, bone pain, muscle weakness, depression', foods: ['Fatty fish', 'Egg yolks', 'Mushrooms', 'Fortified foods'], test: '25-OH Vitamin D' },
+            'folate': { name: 'Folate (B9)', severity: 'high', symptoms: 'Fatigue, mouth sores, cognitive issues, anemia', foods: ['Leafy greens', 'Legumes', 'Asparagus', 'Beef liver'], test: 'Serum folate, RBC folate' },
+            'potassium': { name: 'Potassium', severity: 'high', symptoms: 'Muscle weakness/cramps, heart palpitations, fatigue', foods: ['Bananas', 'Potatoes', 'Avocados', 'Spinach'], test: 'Serum potassium' },
+            'zinc': { name: 'Zinc', severity: 'medium', symptoms: 'Impaired immunity, slow wound healing, hair loss, taste changes', foods: ['Oysters', 'Beef', 'Pumpkin seeds', 'Crab'], test: 'Serum zinc' },
+            'iron': { name: 'Iron', severity: 'medium', symptoms: 'Fatigue, weakness, pale skin, shortness of breath', foods: ['Red meat', 'Spinach', 'Lentils', 'Oysters'], test: 'Ferritin, iron panel' },
+            'calcium': { name: 'Calcium', severity: 'medium', symptoms: 'Muscle cramps, numbness, weak bones', foods: ['Dairy', 'Sardines', 'Leafy greens', 'Tofu'], test: 'Serum calcium, bone density' },
+            'b6': { name: 'Vitamin B6', severity: 'medium', symptoms: 'Fatigue, confusion, depression, weak immunity', foods: ['Chicken', 'Salmon', 'Potatoes', 'Bananas'], test: 'Plasma PLP' },
+            'vitamin_c': { name: 'Vitamin C', severity: 'medium', symptoms: 'Fatigue, slow healing, easy bruising, dry skin', foods: ['Citrus', 'Bell peppers', 'Kiwi', 'Broccoli'], test: 'Serum vitamin C' },
+            'vitamin_e': { name: 'Vitamin E', severity: 'low', symptoms: 'Muscle weakness, vision issues, immune problems', foods: ['Almonds', 'Sunflower seeds', 'Spinach', 'Avocado'], test: 'Serum vitamin E' },
+            'b1': { name: 'Vitamin B1 (Thiamine)', severity: 'medium', symptoms: 'Fatigue, irritability, poor memory, nerve issues', foods: ['Pork', 'Legumes', 'Seeds', 'Whole grains'], test: 'Whole blood thiamine' },
+            'b2': { name: 'Vitamin B2 (Riboflavin)', severity: 'low', symptoms: 'Cracked lips, sore throat, skin issues', foods: ['Eggs', 'Dairy', 'Beef', 'Mushrooms'], test: 'Erythrocyte glutathione reductase' },
+            'b_vitamins': { name: 'B Vitamins (general)', severity: 'medium', symptoms: 'Fatigue, mood changes, digestive issues', foods: ['Meat', 'Eggs', 'Leafy greens', 'Whole grains'], test: 'B vitamin panel' },
+            'probiotics': { name: 'Gut Bacteria (Probiotics)', severity: 'medium', symptoms: 'Digestive issues, bloating, weakened immunity', foods: ['Yogurt', 'Kefir', 'Sauerkraut', 'Kimchi'], test: 'Stool analysis (optional)' },
+            'vitamin_k': { name: 'Vitamin K', severity: 'low', symptoms: 'Easy bruising, bleeding issues', foods: ['Leafy greens', 'Broccoli', 'Brussels sprouts'], test: 'PT/INR, serum vitamin K' },
+            'vitamin_a': { name: 'Vitamin A', severity: 'low', symptoms: 'Night blindness, dry skin, frequent infections', foods: ['Sweet potato', 'Carrots', 'Liver', 'Spinach'], test: 'Serum retinol' },
+            'selenium': { name: 'Selenium', severity: 'low', symptoms: 'Fatigue, muscle weakness, thyroid issues', foods: ['Brazil nuts', 'Sardines', 'Eggs', 'Sunflower seeds'], test: 'Serum selenium' },
+            'melatonin': { name: 'Melatonin', severity: 'medium', symptoms: 'Sleep difficulties, insomnia', foods: ['Tart cherries', 'Eggs', 'Fish', 'Nuts'], test: 'Sleep assessment' },
+            'sodium': { name: 'Sodium', severity: 'low', symptoms: 'Headache, nausea, fatigue, muscle cramps', foods: ['Table salt', 'Broth', 'Pickles'], test: 'Serum sodium' },
+            'biotin': { name: 'Biotin (B7)', severity: 'low', symptoms: 'Hair loss, brittle nails, skin rash', foods: ['Eggs', 'Nuts', 'Salmon', 'Avocado'], test: 'Serum biotin' },
+            'carnitine': { name: 'L-Carnitine', severity: 'low', symptoms: 'Muscle weakness, fatigue, heart issues', foods: ['Red meat', 'Dairy', 'Fish', 'Chicken'], test: 'Serum carnitine' },
+            'calcium_note': { name: 'Calcium (Absorption Timing)', severity: 'low', symptoms: 'No direct depletion—take calcium 4 hours apart from medication', foods: ['Dairy', 'Sardines', 'Leafy greens'], test: 'Serum calcium' }
+        };
+
+        // State
+        let selectedMedications = [];
+        let activeClass = null;
+
+        // Initialize
+        function init() {
+            loadSaved();
+            renderClassChips();
+            setupSearch();
+            updateUI();
+        }
+
+        function loadSaved() {
+            const saved = localStorage.getItem('medication_results');
+            if (saved) {
+                const data = JSON.parse(saved);
+                selectedMedications = data.medications || [];
+            }
+        }
+
+        function renderClassChips() {
+            const classes = [...new Set(medications.map(m => m.class))];
+            document.getElementById('classChips').innerHTML = classes.map(c => 
+                `<button class="class-chip" onclick="filterByClass('${c}')">${c}</button>`
+            ).join('');
+        }
+
+        function setupSearch() {
+            const input = document.getElementById('searchInput');
+            const list = document.getElementById('autocompleteList');
+            let highlightIndex = -1;
+
+            input.addEventListener('input', () => {
+                const query = input.value.toLowerCase().trim();
+                if (query.length < 2) {
+                    list.classList.remove('show');
+                    return;
+                }
+
+                let results = medications.filter(m => {
+                    if (activeClass && m.class !== activeClass) return false;
+                    const matchGeneric = m.generic.toLowerCase().includes(query);
+                    const matchBrand = m.brands.some(b => b.toLowerCase().includes(query));
+                    return matchGeneric || matchBrand;
+                });
+
+                if (results.length === 0) {
+                    list.classList.remove('show');
+                    return;
+                }
+
+                highlightIndex = -1;
+                list.innerHTML = results.slice(0, 8).map((m, i) => `
+                    <div class="autocomplete-item" data-id="${m.id}" onclick="selectMedication('${m.id}')">
+                        <div class="autocomplete-name">${m.generic}</div>
+                        <div class="autocomplete-brands">${m.brands.join(', ')}</div>
+                        <div class="autocomplete-class">${m.class}</div>
+                    </div>
+                `).join('');
+                list.classList.add('show');
+            });
+
+            input.addEventListener('keydown', (e) => {
+                const items = list.querySelectorAll('.autocomplete-item');
+                if (!items.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    highlightIndex = Math.min(highlightIndex + 1, items.length - 1);
+                    updateHighlight(items, highlightIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    highlightIndex = Math.max(highlightIndex - 1, 0);
+                    updateHighlight(items, highlightIndex);
+                } else if (e.key === 'Enter' && highlightIndex >= 0) {
+                    e.preventDefault();
+                    items[highlightIndex].click();
+                } else if (e.key === 'Escape') {
+                    list.classList.remove('show');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-container')) {
+                    list.classList.remove('show');
+                }
+            });
+        }
+
+        function updateHighlight(items, index) {
+            items.forEach((item, i) => {
+                item.classList.toggle('highlighted', i === index);
+            });
+        }
+
+        function filterByClass(className) {
+            const chips = document.querySelectorAll('.class-chip');
+            chips.forEach(c => c.classList.remove('active'));
+            
+            if (activeClass === className) {
+                activeClass = null;
+            } else {
+                activeClass = className;
+                chips.forEach(c => {
+                    if (c.textContent === className) c.classList.add('active');
+                });
+            }
+            
+            // Clear and refocus search
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchInput').focus();
+            document.getElementById('autocompleteList').classList.remove('show');
+        }
+
+        function selectMedication(id) {
+            if (selectedMedications.includes(id)) return;
+            
+            selectedMedications.push(id);
+            document.getElementById('searchInput').value = '';
+            document.getElementById('autocompleteList').classList.remove('show');
+            updateUI();
+        }
+
+        function removeMedication(id) {
+            selectedMedications = selectedMedications.filter(m => m !== id);
+            updateUI();
+        }
+
+        function clearAllMedications() {
+            selectedMedications = [];
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update selected medications display
+            const container = document.getElementById('selectedMeds');
+            const clearBtn = document.getElementById('clearAll');
+            
+            if (selectedMedications.length === 0) {
+                container.innerHTML = '<span class="no-meds">No medications selected yet</span>';
+                clearBtn.style.display = 'none';
+                document.getElementById('resultsSection').classList.remove('show');
+                return;
+            }
+
+            clearBtn.style.display = 'inline';
+            container.innerHTML = selectedMedications.map(id => {
+                const med = medications.find(m => m.id === id);
+                return `
+                    <div class="selected-med">
+                        <span class="selected-med-name">${med.generic}</span>
+                        <button class="selected-med-remove" onclick="removeMedication('${id}')">×</button>
+                    </div>
+                `;
+            }).join('');
+
+            // Calculate depletions
+            renderResults();
+        }
+
+        function renderResults() {
+            // Aggregate all depletions
+            const depletionMap = {};
+            
+            selectedMedications.forEach(medId => {
+                const med = medications.find(m => m.id === medId);
+                med.depletions.forEach(nutrientId => {
+                    if (!depletionMap[nutrientId]) {
+                        depletionMap[nutrientId] = { sources: [], nutrient: nutrients[nutrientId] };
+                    }
+                    depletionMap[nutrientId].sources.push(med.generic);
+                });
+            });
+
+            // Sort by severity and number of sources
+            const severityOrder = { high: 0, medium: 1, low: 2 };
+            const sortedDepletions = Object.entries(depletionMap).sort((a, b) => {
+                const sevA = severityOrder[a[1].nutrient.severity];
+                const sevB = severityOrder[b[1].nutrient.severity];
+                if (sevA !== sevB) return sevA - sevB;
+                return b[1].sources.length - a[1].sources.length;
+            });
+
+            // Count by severity
+            const highCount = sortedDepletions.filter(d => d[1].nutrient.severity === 'high').length;
+            const mediumCount = sortedDepletions.filter(d => d[1].nutrient.severity === 'medium').length;
+
+            // Update summary
+            document.getElementById('highCount').textContent = highCount;
+            document.getElementById('mediumCount').textContent = mediumCount;
+            document.getElementById('totalCount').textContent = sortedDepletions.length;
+            document.getElementById('resultsCount').textContent = `${sortedDepletions.length} nutrients affected`;
+
+            // Render depletion cards
+            document.getElementById('depletionGrid').innerHTML = sortedDepletions.map(([id, data]) => {
+                const n = data.nutrient;
+                const sourceText = data.sources.length > 1 
+                    ? `Depleted by ${data.sources.length} of your medications: ${data.sources.join(', ')}`
+                    : `Depleted by: ${data.sources[0]}`;
+                
+                return `
+                    <div class="depletion-card ${n.severity}">
+                        <div class="depletion-header">
+                            <span class="depletion-nutrient">${n.name}</span>
+                            <span class="depletion-severity">${n.severity === 'high' ? 'High Priority' : n.severity === 'medium' ? 'Moderate' : 'Lower Priority'}</span>
+                        </div>
+                        <div class="depletion-sources"><strong>${sourceText}</strong></div>
+                        <div class="depletion-details">
+                            <div class="depletion-detail">
+                                <div class="depletion-detail-label">Common Symptoms</div>
+                                <div class="depletion-detail-value">${n.symptoms}</div>
+                            </div>
+                            <div class="depletion-detail">
+                                <div class="depletion-detail-label">Recommended Test</div>
+                                <div class="depletion-detail-value">${n.test}</div>
+                            </div>
+                        </div>
+                        <div class="depletion-detail" style="margin-top: 12px;">
+                            <div class="depletion-detail-label">Food Sources</div>
+                            <div class="depletion-foods">
+                                ${n.foods.map(f => `<span class="food-tag">${f}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('resultsSection').classList.add('show');
+        }
+
+        function saveResults() {
+            if (selectedMedications.length === 0) return;
+
+            // Build depletion data
+            const depletionMap = {};
+            selectedMedications.forEach(medId => {
+                const med = medications.find(m => m.id === medId);
+                med.depletions.forEach(nutrientId => {
+                    if (!depletionMap[nutrientId]) {
+                        depletionMap[nutrientId] = { sources: [], nutrient: nutrients[nutrientId] };
+                    }
+                    depletionMap[nutrientId].sources.push(med.generic);
+                });
+            });
+
+            const data = {
+                timestamp: new Date().toISOString(),
+                medications: selectedMedications,
+                medicationNames: selectedMedications.map(id => medications.find(m => m.id === id).generic),
+                depletions: Object.entries(depletionMap).map(([id, data]) => ({
+                    id,
+                    name: data.nutrient.name,
+                    severity: data.nutrient.severity,
+                    sources: data.sources
+                }))
+            };
+
+            localStorage.setItem('medication_results', JSON.stringify(data));
+            
+            const msg = document.getElementById('statusMessage');
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
+
+        // Event listeners
+        document.getElementById('clearAll').addEventListener('click', clearAllMedications);
+
+        init();
+    </script>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.querySelector('.theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom → Deficiency Mapper</title>
+    <style>
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); min-height: 100vh; padding: 12px; }
+        .container { max-width: 700px; margin: 0 auto; }
+        .nav-link { display: block; text-align: center; margin-bottom: 12px; color: white; text-decoration: none; font-size: 13px; opacity: 0.9; }
+        .nav-link:hover { opacity: 1; text-decoration: underline; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); margin-bottom: 16px; }
+        @media (max-width: 500px) { .card { padding: 20px 16px; } }
+        h1 { color: var(--accent); text-align: center; margin-bottom: 6px; font-size: 22px; }
+        .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 20px; font-size: 13px; }
+        h2 { color: var(--accent); font-size: 16px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+        h3 { color: #4a7c59; font-size: 13px; margin: 16px 0 10px 0; }
+        .intro-text { font-size: 13px; color: #555; margin-bottom: 16px; line-height: 1.5; text-align: center; }
+        .category-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; justify-content: center; }
+        .category-tab { padding: 8px 14px; font-size: 12px; background: #f0f0f0; border: none; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .category-tab:hover { background: #e0e0e0; }
+        .category-tab.active { background: #1a5f5f; color: white; }
+        .symptom-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 20px; }
+        .symptom-btn { padding: 12px 14px; font-size: 12px; background: #f8f8f8; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s; text-align: left; font-weight: 500; color: #444; }
+        .symptom-btn:hover { border-color: var(--accent); background: #f0f8f8; }
+        .symptom-btn.selected { border-color: var(--accent); background: #e8f4f4; color: var(--accent); }
+        .symptom-btn.selected::before { content: "✓ "; font-weight: bold; }
+        .selected-bar { background: #f8f8f8; border-radius: 10px; padding: 14px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 50px; }
+        .selected-label { font-size: 12px; color: var(--text-secondary); margin-right: 8px; }
+        .selected-tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: #1a5f5f; color: white; border-radius: 15px; font-size: 11px; font-weight: 500; }
+        .selected-tag .remove { cursor: pointer; opacity: 0.8; font-size: 14px; }
+        .selected-tag .remove:hover { opacity: 1; }
+        .clear-btn { margin-left: auto; padding: 5px 12px; background: #fde8e8; color: #c0392b; border: none; border-radius: 15px; font-size: 11px; cursor: pointer; font-weight: 600; }
+        .analyze-btn { width: 100%; padding: 14px; background: #1a5f5f; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .analyze-btn:hover { background: #155050; }
+        .analyze-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .results { display: none; }
+        .results.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-section { margin-bottom: 20px; }
+        .saved-notice { background: #e8f5e8; color: #27ae60; padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; margin-bottom: 16px; }
+        .deficiency-card { background: #f8f8f8; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #1a5f5f; }
+        .deficiency-card.high { border-left-color: #e85a4f; }
+        .deficiency-card.medium { border-left-color: #f0ad4e; }
+        .deficiency-card.low { border-left-color: #4a7c59; }
+        .deficiency-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .deficiency-name { font-weight: 700; font-size: 15px; color: var(--text); }
+        .deficiency-score { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: 600; }
+        .deficiency-score.high { background: #fde8e8; color: #c0392b; }
+        .deficiency-score.medium { background: #fef3cd; color: #d68910; }
+        .deficiency-score.low { background: #e8f5e8; color: #27ae60; }
+        .deficiency-symptoms { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
+        .matched-symptom { display: inline-block; padding: 2px 8px; background: var(--card-bg); border-radius: 10px; margin: 2px; font-size: 11px; color: var(--accent); border: 1px solid var(--border); }
+        .deficiency-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-tag { font-size: 10px; padding: 4px 10px; border-radius: 12px; font-weight: 600; }
+        .action-tag.test { background: #e8f4f4; color: var(--accent); }
+        .action-tag.food { background: #e8f5e8; color: #27ae60; }
+        .test-panel { background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); border-radius: 12px; padding: 20px; color: white; margin-top: 16px; }
+        .test-panel h3 { color: white; margin-bottom: 12px; font-size: 15px; }
+        .test-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .test-item { background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 20px; font-size: 12px; }
+        .cta-box { background: linear-gradient(135deg, #e85a4f 0%, #ff7b6b 100%); border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px; }
+        .cta-box h3 { color: white; font-size: 15px; margin-bottom: 8px; }
+        .cta-box p { color: rgba(255,255,255,0.9); font-size: 12px; margin-bottom: 14px; }
+        .cta-box .btn { background: var(--card-bg); color: #e85a4f; padding: 12px 24px; text-decoration: none; display: inline-block; }
+        .action-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-primary { background: #1a5f5f; color: white; }
+        .btn-outline { background: var(--card-bg); border: 2px solid #1a5f5f; color: var(--accent); }
+        .disclaimer { margin-top: 20px; padding: 14px; background: #f8f8f8; border-radius: 8px; font-size: 10px; color: var(--text-secondary); text-align: center; }
+        .cross-links { display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+        .cross-link { background: var(--card-bg); padding: 10px 14px; border-radius: 10px; text-decoration: none; color: var(--accent); font-size: 11px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="nav-link">← Back to Dashboard</a>
+        <div class="card">
+            <h1>Symptom → Deficiency Mapper</h1>
+            <p class="subtitle">Select your symptoms. See what might be low.</p>
+            <div id="selector">
+                <p class="intro-text">Select all symptoms you're experiencing regularly (not just once in a while).</p>
+                <div class="category-tabs" id="categoryTabs"></div>
+                <div class="symptom-grid" id="symptomGrid"></div>
+                <div class="selected-bar" id="selectedBar">
+                    <span class="selected-label">Selected:</span>
+                    <span id="selectedTags" style="color: var(--text-muted);font-size:12px;">None yet</span>
+                </div>
+                <button class="analyze-btn" id="analyzeBtn" onclick="analyze()" disabled>Analyze Symptoms</button>
+            </div>
+            <div id="results" class="results"></div>
+        </div>
+        <div class="cross-links">
+            <a href="calculator.html" class="cross-link">📊 Risk Calculator</a>
+            <a href="shopping.html" class="cross-link">🛒 Shopping List</a>
+            <a href="protocol.html" class="cross-link">📋 My Protocol</a>
+        </div>
+    </div>
+    <script>
+        const symptomData = {
+            energy: { name: '⚡ Energy', symptoms: [
+                { id: 'fatigue', name: 'Constant fatigue', deficiencies: ['Iron', 'B12', 'Vit D', 'Magnesium', 'B Vitamins'] },
+                { id: 'afternoon_crash', name: 'Afternoon crash', deficiencies: ['Chromium', 'B Vitamins', 'Magnesium'] },
+                { id: 'morning_tired', name: 'Tired after sleep', deficiencies: ['Iron', 'B12', 'Vit D', 'Magnesium'] },
+                { id: 'exercise_fatigue', name: 'Post-exercise exhaustion', deficiencies: ['Iron', 'Magnesium', 'Potassium'] },
+                { id: 'weakness', name: 'Muscle weakness', deficiencies: ['Vit D', 'Potassium', 'Magnesium', 'B12'] }
+            ]},
+            mood: { name: '🧠 Mood', symptoms: [
+                { id: 'brain_fog', name: 'Brain fog', deficiencies: ['B12', 'Iron', 'Omega-3', 'Vit D'] },
+                { id: 'anxiety', name: 'Anxiety', deficiencies: ['Magnesium', 'B Vitamins', 'Omega-3', 'Vit D'] },
+                { id: 'depression', name: 'Low mood', deficiencies: ['Vit D', 'B12', 'Omega-3', 'Folate', 'Iron'] },
+                { id: 'irritability', name: 'Irritability', deficiencies: ['Magnesium', 'B Vitamins', 'Omega-3'] },
+                { id: 'memory', name: 'Poor memory', deficiencies: ['B12', 'Omega-3', 'Iron', 'Vit D'] }
+            ]},
+            sleep: { name: '😴 Sleep', symptoms: [
+                { id: 'insomnia', name: 'Trouble falling asleep', deficiencies: ['Magnesium', 'Vit D', 'B Vitamins'] },
+                { id: 'restless', name: 'Restless sleep', deficiencies: ['Magnesium', 'Iron', 'Potassium'] },
+                { id: 'restless_legs', name: 'Restless legs', deficiencies: ['Iron', 'Magnesium', 'Folate'] },
+                { id: 'waking', name: 'Waking frequently', deficiencies: ['Magnesium', 'B Vitamins', 'Vit D'] }
+            ]},
+            physical: { name: '💪 Physical', symptoms: [
+                { id: 'cramps', name: 'Muscle cramps', deficiencies: ['Magnesium', 'Potassium', 'Calcium', 'Vit D'] },
+                { id: 'twitches', name: 'Eye/muscle twitches', deficiencies: ['Magnesium', 'Potassium', 'Calcium'] },
+                { id: 'headaches', name: 'Frequent headaches', deficiencies: ['Magnesium', 'B Vitamins', 'Iron'] },
+                { id: 'cold_hands', name: 'Cold hands/feet', deficiencies: ['Iron', 'B12', 'Magnesium'] },
+                { id: 'dizziness', name: 'Dizziness', deficiencies: ['Iron', 'B12', 'Vit D'] },
+                { id: 'shortness_breath', name: 'Shortness of breath', deficiencies: ['Iron', 'B12'] },
+                { id: 'palpitations', name: 'Heart palpitations', deficiencies: ['Magnesium', 'Potassium', 'Iron'] }
+            ]},
+            skin: { name: '✨ Skin/Hair', symptoms: [
+                { id: 'dry_skin', name: 'Dry skin', deficiencies: ['Omega-3', 'Vit A', 'Zinc', 'Vit D'] },
+                { id: 'hair_loss', name: 'Hair loss', deficiencies: ['Iron', 'Zinc', 'B Vitamins', 'Vit D'] },
+                { id: 'brittle_nails', name: 'Brittle nails', deficiencies: ['Iron', 'Zinc', 'Calcium'] },
+                { id: 'slow_healing', name: 'Slow wound healing', deficiencies: ['Zinc', 'Vit C', 'Vit D'] },
+                { id: 'bruising', name: 'Easy bruising', deficiencies: ['Vit C', 'Vit K', 'Iron'] },
+                { id: 'pale_skin', name: 'Pale skin', deficiencies: ['Iron', 'B12', 'Folate'] }
+            ]},
+            immune: { name: '🛡️ Immune', symptoms: [
+                { id: 'frequent_illness', name: 'Frequent colds', deficiencies: ['Vit D', 'Zinc', 'Vit C'] },
+                { id: 'mouth_sores', name: 'Mouth sores', deficiencies: ['B Vitamins', 'Iron', 'Zinc'] },
+                { id: 'bleeding_gums', name: 'Bleeding gums', deficiencies: ['Vit C', 'Vit K'] },
+                { id: 'taste_smell', name: 'Reduced taste/smell', deficiencies: ['Zinc'] },
+                { id: 'tingling', name: 'Numbness/tingling', deficiencies: ['B12', 'B Vitamins', 'Magnesium'] },
+                { id: 'cravings', name: 'Sugar cravings', deficiencies: ['Chromium', 'Magnesium', 'B Vitamins'] },
+                { id: 'bone_pain', name: 'Bone/joint pain', deficiencies: ['Vit D', 'Calcium', 'Magnesium'] }
+            ]}
+        };
+        const deficiencyInfo = {
+            'Iron': { test: 'Ferritin, CBC, Iron Panel', foods: 'Red meat, liver, oysters, spinach' },
+            'B12': { test: 'B12, MMA, Homocysteine', foods: 'Liver, beef, salmon, eggs' },
+            'Vit D': { test: 'Vitamin D (25-OH)', foods: 'Sun, fatty fish, eggs, mushrooms' },
+            'Magnesium': { test: 'RBC Magnesium', foods: 'Pumpkin seeds, spinach, dark chocolate' },
+            'B Vitamins': { test: 'B12, Folate, Homocysteine', foods: 'Eggs, liver, nutritional yeast' },
+            'Zinc': { test: 'Plasma Zinc (fasted)', foods: 'Oysters, beef, pumpkin seeds' },
+            'Omega-3': { test: 'Omega-3 Index', foods: 'Salmon, sardines, mackerel' },
+            'Folate': { test: 'RBC Folate, Homocysteine', foods: 'Leafy greens, liver, lentils' },
+            'Potassium': { test: 'Basic Metabolic Panel', foods: 'Potatoes, bananas, avocado' },
+            'Calcium': { test: 'Calcium, Vit D, PTH', foods: 'Dairy, sardines, leafy greens' },
+            'Vit C': { test: 'Vitamin C (plasma)', foods: 'Bell peppers, citrus, strawberries' },
+            'Vit A': { test: 'Retinol', foods: 'Liver, sweet potato, carrots' },
+            'Vit K': { test: 'PT/INR (indirect)', foods: 'Leafy greens, natto, cheese' },
+            'Chromium': { test: 'Fasting Insulin, HbA1c', foods: 'Broccoli, beef, whole grains' }
+        };
+        let activeCategory = 'energy';
+        let selectedSymptoms = new Set();
+        function init() { renderCategoryTabs(); renderSymptoms(); updateSelectedBar(); }
+        function renderCategoryTabs() {
+            document.getElementById('categoryTabs').innerHTML = Object.entries(symptomData).map(([key, cat]) => 
+                `<button class="category-tab ${activeCategory === key ? 'active' : ''}" onclick="setCategory('${key}')">${cat.name}</button>`
+            ).join('');
+        }
+        function setCategory(cat) { activeCategory = cat; renderCategoryTabs(); renderSymptoms(); }
+        function renderSymptoms() {
+            const symptoms = symptomData[activeCategory].symptoms;
+            document.getElementById('symptomGrid').innerHTML = symptoms.map(s => 
+                `<button class="symptom-btn ${selectedSymptoms.has(s.id) ? 'selected' : ''}" onclick="toggleSymptom('${s.id}')">${s.name}</button>`
+            ).join('');
+        }
+        function toggleSymptom(id) { if (selectedSymptoms.has(id)) selectedSymptoms.delete(id); else selectedSymptoms.add(id); renderSymptoms(); updateSelectedBar(); }
+        function removeSymptom(id) { selectedSymptoms.delete(id); renderSymptoms(); updateSelectedBar(); }
+        function updateSelectedBar() {
+            const container = document.getElementById('selectedTags');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            if (selectedSymptoms.size === 0) {
+                container.innerHTML = '<span style="color: var(--text-muted);font-size:12px;">None yet - select symptoms above</span>';
+                analyzeBtn.disabled = true;
+            } else {
+                const allSymptoms = Object.values(symptomData).flatMap(cat => cat.symptoms);
+                const selected = allSymptoms.filter(s => selectedSymptoms.has(s.id));
+                container.innerHTML = selected.map(s => `<span class="selected-tag">${s.name} <span class="remove" onclick="removeSymptom('${s.id}')">×</span></span>`).join('') + `<button class="clear-btn" onclick="clearAll()">Clear All</button>`;
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = `Analyze ${selectedSymptoms.size} Symptom${selectedSymptoms.size > 1 ? 's' : ''}`;
+            }
+        }
+        function clearAll() { selectedSymptoms.clear(); renderSymptoms(); updateSelectedBar(); }
+        function analyze() {
+            const allSymptoms = Object.values(symptomData).flatMap(cat => cat.symptoms);
+            const selected = allSymptoms.filter(s => selectedSymptoms.has(s.id));
+            const deficiencyScores = {};
+            const deficiencySymptoms = {};
+            selected.forEach(s => {
+                s.deficiencies.forEach(d => {
+                    if (!deficiencyScores[d]) { deficiencyScores[d] = 0; deficiencySymptoms[d] = []; }
+                    deficiencyScores[d]++;
+                    deficiencySymptoms[d].push(s.name);
+                });
+            });
+            const sorted = Object.entries(deficiencyScores).map(([name, score]) => ({ name, score, symptoms: deficiencySymptoms[name], info: deficiencyInfo[name] })).sort((a, b) => b.score - a.score);
+            saveResults(selected, sorted);
+            renderResults(sorted);
+        }
+        function saveResults(selectedSymptoms, deficiencyResults) {
+            const results = {
+                timestamp: new Date().toISOString(),
+                symptoms: selectedSymptoms.map(s => ({ id: s.id, name: s.name })),
+                deficiencies: deficiencyResults.map(d => ({ name: d.name, score: d.score, level: d.score >= 3 ? 'high' : d.score >= 2 ? 'medium' : 'low' }))
+            };
+            localStorage.setItem('symptom_results', JSON.stringify(results));
+        }
+        function renderResults(sorted) {
+            document.getElementById('selector').style.display = 'none';
+            document.getElementById('results').classList.add('active');
+            const resultsHtml = sorted.map(d => {
+                const level = d.score >= 3 ? 'high' : d.score >= 2 ? 'medium' : 'low';
+                const levelText = d.score >= 3 ? 'Likely' : d.score >= 2 ? 'Possible' : 'Consider';
+                return `
+                    <div class="deficiency-card ${level}">
+                        <div class="deficiency-header">
+                            <span class="deficiency-name">${d.name}</span>
+                            <span class="deficiency-score ${level}">${levelText} (${d.score})</span>
+                        </div>
+                        <div class="deficiency-symptoms">Your symptoms: ${d.symptoms.map(s => `<span class="matched-symptom">${s}</span>`).join('')}</div>
+                        <div class="deficiency-actions">
+                            <span class="action-tag test">Test: ${d.info.test}</span>
+                            <span class="action-tag food">Foods: ${d.info.foods}</span>
+                        </div>
+                    </div>`;
+            }).join('');
+            const tests = [...new Set(sorted.slice(0, 5).map(d => d.info.test.split(', ')).flat())];
+            document.getElementById('results').innerHTML = `
+                <div class="saved-notice">✓ Results saved to your profile</div>
+                <h2>Your Results</h2>
+                ${resultsHtml}
+                <div class="test-panel">
+                    <h3>🔬 Tests to Request</h3>
+                    <div class="test-list">${tests.map(t => `<span class="test-item">${t}</span>`).join('')}</div>
+                </div>
+                <div class="cta-box">
+                    <h3>Generate Your Full Protocol</h3>
+                    <p>Combine with your risk calculator for a complete action plan.</p>
+                    <a href="protocol.html" class="btn">Generate Protocol →</a>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-outline" onclick="startOver()">Start Over</button>
+                    <a href="calculator.html" class="btn btn-outline">Add Risk Factors</a>
+                    <a href="bloodwork.html" class="btn btn-primary">Log Bloodwork</a>
+                </div>
+                <div class="disclaimer"><strong>Disclaimer:</strong> Educational only. Many symptoms overlap. Consult a healthcare provider for proper testing.</div>`;
+        }
+        function startOver() { selectedSymptoms.clear(); document.getElementById('selector').style.display = 'block'; document.getElementById('results').classList.remove('active'); renderSymptoms(); updateSelectedBar(); }
+        init();
+    </script>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.querySelector('.theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

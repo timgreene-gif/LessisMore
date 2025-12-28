@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloodwork Reference & Log</title>
+    <style>
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 12px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 13px;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: white;
+            opacity: 0.9;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .nav-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 12px 14px;
+            background: var(--card-bg);
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            background: #e8f4f4;
+        }
+        
+        .tab.active {
+            background: #1a5f5f;
+            color: white;
+        }
+        
+        .panel {
+            display: none;
+        }
+        
+        .panel.active {
+            display: block;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 16px;
+        }
+        
+        .card h2 {
+            color: var(--accent);
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .card h3 {
+            color: #4a7c59;
+            font-size: 13px;
+            margin: 14px 0 6px 0;
+        }
+        
+        .reference-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .reference-table th {
+            background: #1a5f5f;
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        
+        .reference-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        
+        .reference-table tr:hover {
+            background: #f8fafa;
+        }
+        
+        .marker-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .notes {
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -20px;
+            padding: 0 20px;
+        }
+        
+        .reference-table {
+            min-width: 500px;
+        }
+        
+        .log-form {
+            display: grid;
+            gap: 14px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        @media (max-width: 500px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select {
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #1a5f5f;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #155050;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--text-secondary);
+        }
+        
+        .btn-danger {
+            background: #fde8e8;
+            color: #c0392b;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 11px;
+        }
+        
+        .marker-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        
+        .marker-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 12px;
+        }
+        
+        .marker-checkbox:hover {
+            background: #e8f4f4;
+        }
+        
+        .marker-checkbox input {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .log-entry {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .log-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        
+        .log-date {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 14px;
+        }
+        
+        .log-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 8px;
+        }
+        
+        .log-value {
+            background: #f8f8f8;
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+        
+        .log-value .marker {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .log-value .value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        .log-value .value.optimal { color: #4a7c59; }
+        .log-value .value.suboptimal { color: #d68910; }
+        .log-value .value.concerning { color: #c0392b; }
+        
+        .log-value .unit {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        
+        /* Trend Charts */
+        .trend-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .trend-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .trend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .trend-title {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .trend-current {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 140px;
+            background: linear-gradient(to bottom, #fafafa 0%, #f0f0f0 100%);
+            border-radius: 12px;
+            padding: 15px 10px;
+            overflow: hidden;
+        }
+        
+        .optimal-band {
+            position: absolute;
+            left: 0;
+            right: 0;
+            background: rgba(74, 124, 89, 0.15);
+            border-top: 2px dashed rgba(74, 124, 89, 0.4);
+            border-bottom: 2px dashed rgba(74, 124, 89, 0.4);
+        }
+        
+        .chart-line {
+            position: absolute;
+            top: 15px;
+            bottom: 35px;
+            left: 10px;
+            right: 10px;
+        }
+        
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .chart-points-container {
+            position: absolute;
+            top: 15px;
+            bottom: 35px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .point-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .point-value {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        
+        .point-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .point-dot.optimal { background: #4a7c59; }
+        .point-dot.suboptimal { background: #f0ad4e; }
+        .point-dot.concerning { background: #e85a4f; }
+        
+        .point-date {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            white-space: nowrap;
+        }
+        
+        .chart-y-labels {
+            position: absolute;
+            top: 15px;
+            bottom: 35px;
+            left: -5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 8px;
+            color: var(--text-muted);
+        }
+        
+        .trend-legend {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 12px;
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .legend-dot.optimal { background: #4a7c59; }
+        .legend-dot.suboptimal { background: #f0ad4e; }
+        .legend-dot.concerning { background: #e85a4f; }
+        
+        .marker-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .filter-btn {
+            padding: 6px 12px;
+            font-size: 11px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .filter-btn.active {
+            background: #1a5f5f;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state h3 {
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+        
+        .disclaimer {
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 16px;
+            padding: 14px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .tips-list {
+            font-size: 12px;
+            color: #555;
+            margin-left: 18px;
+            line-height: 1.6;
+        }
+        
+        .tips-list li {
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Bloodwork Reference & Log</h1>
+            <p>Track your markers. Understand optimal vs "normal."</p>
+            <a href="index.html" class="nav-link">← Back to Dashboard</a>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('reference')">Reference</button>
+            <button class="tab" onclick="showTab('log')">Log</button>
+            <button class="tab" onclick="showTab('history')">History</button>
+            <button class="tab" onclick="showTab('trends')">Trends</button>
+        </div>
+        
+        <div id="reference" class="panel active">
+            <div class="card">
+                <h2>Key Nutrient Markers</h2>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    <strong>"Normal"</strong> = population average. <strong>Optimal</strong> = where you function best.
+                </p>
+                
+                <div class="table-wrapper">
+                    <table class="reference-table">
+                        <thead>
+                            <tr><th>Marker</th><th>Lab "Normal"</th><th>Optimal</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="marker-name">Vitamin D</span></td><td>30-100 ng/mL</td><td><strong>50-80</strong></td><td class="notes">Most are low. Test in winter.</td></tr>
+                            <tr><td><span class="marker-name">Vitamin B12</span></td><td>200-900 pg/mL</td><td><strong>500-800</strong></td><td class="notes">Below 500 can cause symptoms.</td></tr>
+                            <tr><td><span class="marker-name">Ferritin</span></td><td>12-300 ng/mL</td><td><strong>50-150</strong></td><td class="notes">Low = fatigue. Women often low.</td></tr>
+                            <tr><td><span class="marker-name">RBC Magnesium</span></td><td>4.2-6.8 mg/dL</td><td><strong>5.5-6.5</strong></td><td class="notes">Serum Mg unreliable.</td></tr>
+                            <tr><td><span class="marker-name">Zinc</span></td><td>60-120 mcg/dL</td><td><strong>90-120</strong></td><td class="notes">Must be fasted.</td></tr>
+                            <tr><td><span class="marker-name">Homocysteine</span></td><td>5-15 µmol/L</td><td><strong>&lt;8</strong></td><td class="notes">High = B vitamin deficiency.</td></tr>
+                            <tr><td><span class="marker-name">HbA1c</span></td><td>4.0-5.6%</td><td><strong>4.8-5.2</strong></td><td class="notes">3-month glucose average.</td></tr>
+                            <tr><td><span class="marker-name">Fasting Insulin</span></td><td>2.6-25 µIU/mL</td><td><strong>3-8</strong></td><td class="notes">Earlier warning than glucose.</td></tr>
+                            <tr><td><span class="marker-name">hs-CRP</span></td><td>&lt;3.0 mg/L</td><td><strong>&lt;1.0</strong></td><td class="notes">Inflammation marker.</td></tr>
+                            <tr><td><span class="marker-name">TSH</span></td><td>0.4-4.0 mIU/L</td><td><strong>1.0-2.5</strong></td><td class="notes">Many feel better at lower end.</td></tr>
+                            <tr><td><span class="marker-name">Omega-3 Index</span></td><td>N/A</td><td><strong>8-12%</strong></td><td class="notes">Most Americans &lt;4%.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Testing Tips</h2>
+                <ul class="tips-list">
+                    <li>Fast 12 hours for insulin, glucose, lipids</li>
+                    <li>Test vitamin D in late winter</li>
+                    <li>Test iron/ferritin in the morning</li>
+                    <li>Skip B vitamins 24-48hrs before testing B12</li>
+                    <li>Request copies—don't just accept "normal"</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="log" class="panel">
+            <div class="card">
+                <h2>Log New Results</h2>
+                <div class="log-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Test Date</label>
+                            <input type="date" id="testDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Lab / Provider</label>
+                            <input type="text" id="labName" placeholder="Quest, LabCorp, etc.">
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: var(--accent); margin-top: 4px;">Select markers:</h3>
+                    <div class="marker-select-grid" id="markerSelect"></div>
+                    <div id="markerInputs"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 6px;">
+                        <button class="btn btn-primary" onclick="saveLogEntry()">Save</button>
+                        <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="history" class="panel">
+            <div class="card">
+                <h2>Results History</h2>
+                <div id="logHistory"></div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-secondary btn-sm" onclick="exportLogs()">Export</button>
+                <button class="btn btn-secondary btn-sm" onclick="importLogs()">Import</button>
+                <button class="btn btn-danger btn-sm" onclick="clearLogs()">Clear All</button>
+            </div>
+        </div>
+        
+        <div id="trends" class="panel">
+            <div class="card">
+                <h2>Trends Over Time</h2>
+                <div class="marker-filter" id="markerFilter"></div>
+                <div id="trendCharts"></div>
+                <div class="trend-legend">
+                    <div class="legend-item"><span class="legend-dot optimal"></span> Optimal</div>
+                    <div class="legend-item"><span class="legend-dot suboptimal"></span> In range</div>
+                    <div class="legend-item"><span class="legend-dot concerning"></span> Out of range</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>Disclaimer:</strong> Personal tracking only, not medical advice. All data stored locally.
+        </div>
+    </div>
+
+    <script>
+        const markers = [
+            { id: 'vitamin_d', name: 'Vitamin D', unit: 'ng/mL', optimal: [50, 80], normal: [30, 100] },
+            { id: 'b12', name: 'B12', unit: 'pg/mL', optimal: [500, 800], normal: [200, 900] },
+            { id: 'ferritin', name: 'Ferritin', unit: 'ng/mL', optimal: [50, 150], normal: [12, 300] },
+            { id: 'rbc_mag', name: 'RBC Mg', unit: 'mg/dL', optimal: [5.5, 6.5], normal: [4.2, 6.8] },
+            { id: 'zinc', name: 'Zinc', unit: 'mcg/dL', optimal: [90, 120], normal: [60, 120] },
+            { id: 'folate', name: 'Folate', unit: 'ng/mL', optimal: [10, 25], normal: [3, 20] },
+            { id: 'homocysteine', name: 'Homocysteine', unit: 'µmol/L', optimal: [0, 8], normal: [5, 15] },
+            { id: 'hba1c', name: 'HbA1c', unit: '%', optimal: [4.8, 5.2], normal: [4.0, 5.6] },
+            { id: 'fasting_insulin', name: 'Insulin', unit: 'µIU/mL', optimal: [3, 8], normal: [2.6, 24.9] },
+            { id: 'hscrp', name: 'hs-CRP', unit: 'mg/L', optimal: [0, 1], normal: [0, 3] },
+            { id: 'tsh', name: 'TSH', unit: 'mIU/L', optimal: [1.0, 2.5], normal: [0.4, 4.0] },
+            { id: 'omega3_index', name: 'Omega-3', unit: '%', optimal: [8, 12], normal: [4, 12] }
+        ];
+        
+        let selectedMarkers = [];
+        let logs = [];
+        let activeFilter = 'all';
+        
+        function init() {
+            loadLogs();
+            renderMarkerSelect();
+            renderHistory();
+            renderMarkerFilter();
+            renderTrendCharts();
+            document.getElementById('testDate').valueAsDate = new Date();
+        }
+        
+        function loadLogs() {
+            const stored = localStorage.getItem('bloodwork_logs');
+            if (stored) logs = JSON.parse(stored);
+        }
+        
+        function saveLogs() {
+            localStorage.setItem('bloodwork_logs', JSON.stringify(logs));
+        }
+        
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'history') renderHistory();
+            if (tabId === 'trends') { renderMarkerFilter(); renderTrendCharts(); }
+        }
+        
+        function renderMarkerSelect() {
+            document.getElementById('markerSelect').innerHTML = markers.map(m => `
+                <div class="marker-checkbox">
+                    <input type="checkbox" id="select_${m.id}" onchange="toggleMarker('${m.id}')">
+                    <label for="select_${m.id}">${m.name}</label>
+                </div>
+            `).join('');
+        }
+        
+        function toggleMarker(markerId) {
+            const idx = selectedMarkers.indexOf(markerId);
+            if (idx > -1) selectedMarkers.splice(idx, 1);
+            else selectedMarkers.push(markerId);
+            renderMarkerInputs();
+        }
+        
+        function renderMarkerInputs() {
+            const container = document.getElementById('markerInputs');
+            if (selectedMarkers.length === 0) { container.innerHTML = ''; return; }
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px;">
+                    ${selectedMarkers.map(id => {
+                        const m = markers.find(x => x.id === id);
+                        return `<div class="form-group"><label>${m.name}</label><input type="number" step="0.1" id="value_${m.id}" placeholder="${m.unit}"></div>`;
+                    }).join('')}
+                </div>`;
+        }
+        
+        function saveLogEntry() {
+            const date = document.getElementById('testDate').value;
+            const lab = document.getElementById('labName').value;
+            if (!date) { alert('Select a date'); return; }
+            if (selectedMarkers.length === 0) { alert('Select markers'); return; }
+            const values = {};
+            selectedMarkers.forEach(id => {
+                const input = document.getElementById(`value_${id}`);
+                if (input && input.value) values[id] = parseFloat(input.value);
+            });
+            if (Object.keys(values).length === 0) { alert('Enter values'); return; }
+            logs.push({ id: Date.now(), date, lab, values });
+            logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            saveLogs();
+            clearForm();
+            alert('Saved!');
+            showTab('history');
+        }
+        
+        function clearForm() {
+            document.getElementById('testDate').valueAsDate = new Date();
+            document.getElementById('labName').value = '';
+            selectedMarkers = [];
+            document.querySelectorAll('#markerSelect input').forEach(cb => cb.checked = false);
+            renderMarkerInputs();
+        }
+        
+        function getValueStatus(markerId, value) {
+            const m = markers.find(x => x.id === markerId);
+            if (!m) return 'suboptimal';
+            if (value >= m.optimal[0] && value <= m.optimal[1]) return 'optimal';
+            if (value >= m.normal[0] && value <= m.normal[1]) return 'suboptimal';
+            return 'concerning';
+        }
+        
+        function renderHistory() {
+            const container = document.getElementById('logHistory');
+            if (logs.length === 0) {
+                container.innerHTML = `<div class="empty-state"><h3>No results yet</h3><p>Log your first bloodwork.</p></div>`;
+                return;
+            }
+            container.innerHTML = logs.map(entry => {
+                const valueCards = Object.entries(entry.values).map(([markerId, value]) => {
+                    const m = markers.find(x => x.id === markerId);
+                    const status = getValueStatus(markerId, value);
+                    return `<div class="log-value"><div class="marker">${m ? m.name : markerId}</div><div class="value ${status}">${value} <span class="unit">${m ? m.unit : ''}</span></div></div>`;
+                }).join('');
+                return `
+                    <div class="log-entry">
+                        <div class="log-entry-header">
+                            <div><div class="log-date">${formatDate(entry.date)}</div>${entry.lab ? `<div style="font-size:11px;color: var(--text-secondary);">${entry.lab}</div>` : ''}</div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteEntry(${entry.id})">Delete</button>
+                        </div>
+                        <div class="log-values">${valueCards}</div>
+                    </div>`;
+            }).join('');
+        }
+        
+        function formatDate(dateStr) {
+            return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        
+        function formatShortDate(dateStr) {
+            return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        function deleteEntry(id) {
+            if (confirm('Delete?')) {
+                logs = logs.filter(l => l.id !== id);
+                saveLogs();
+                renderHistory();
+                renderTrendCharts();
+            }
+        }
+        
+        function renderMarkerFilter() {
+            const usedMarkers = new Set();
+            logs.forEach(l => Object.keys(l.values).forEach(k => usedMarkers.add(k)));
+            let html = `<button class="filter-btn ${activeFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All</button>`;
+            usedMarkers.forEach(id => {
+                const m = markers.find(x => x.id === id);
+                if (m) html += `<button class="filter-btn ${activeFilter === id ? 'active' : ''}" onclick="setFilter('${id}')">${m.name}</button>`;
+            });
+            document.getElementById('markerFilter').innerHTML = html;
+        }
+        
+        function setFilter(filter) {
+            activeFilter = filter;
+            renderMarkerFilter();
+            renderTrendCharts();
+        }
+        
+        function renderTrendCharts() {
+            const container = document.getElementById('trendCharts');
+            
+            const markerData = {};
+            logs.forEach(log => {
+                Object.entries(log.values).forEach(([markerId, value]) => {
+                    if (!markerData[markerId]) markerData[markerId] = [];
+                    markerData[markerId].push({ date: log.date, value });
+                });
+            });
+            
+            Object.keys(markerData).forEach(k => {
+                markerData[k].sort((a, b) => new Date(a.date) - new Date(b.date));
+            });
+            
+            let markersToShow = Object.keys(markerData);
+            if (activeFilter !== 'all') markersToShow = markersToShow.filter(m => m === activeFilter);
+            
+            if (markersToShow.length === 0) {
+                container.innerHTML = `<div class="empty-state"><h3>No trend data</h3><p>Log results to see trends.</p></div>`;
+                return;
+            }
+            
+            container.innerHTML = markersToShow.map(markerId => {
+                const m = markers.find(x => x.id === markerId);
+                const data = markerData[markerId].slice(-8);
+                const latest = data[data.length - 1];
+                const latestStatus = getValueStatus(markerId, latest.value);
+                
+                const allValues = data.map(d => d.value);
+                const minVal = Math.min(...allValues, m.optimal[0]) * 0.9;
+                const maxVal = Math.max(...allValues, m.optimal[1]) * 1.1;
+                const range = maxVal - minVal || 1;
+                
+                const optimalBottomPct = ((m.optimal[0] - minVal) / range) * 100;
+                const optimalHeightPct = ((m.optimal[1] - m.optimal[0]) / range) * 100;
+                
+                const points = data.map((d, i) => {
+                    const bottomPct = ((d.value - minVal) / range) * 100;
+                    const status = getValueStatus(markerId, d.value);
+                    return { ...d, bottomPct, status };
+                });
+                
+                const pointsHtml = points.map((p, i) => `
+                    <div class="point-wrapper">
+                        <div class="point-value">${p.value}</div>
+                        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;">
+                            <div style="height:${p.bottomPct}%;display:flex;align-items:flex-start;justify-content:center;">
+                                <div class="point-dot ${p.status}"></div>
+                            </div>
+                        </div>
+                        <div class="point-date">${formatShortDate(p.date)}</div>
+                    </div>
+                `).join('');
+                
+                return `
+                    <div class="trend-section">
+                        <div class="trend-header">
+                            <span class="trend-title">${m.name}</span>
+                            <span class="trend-current">Latest: <strong style="color:${latestStatus === 'optimal' ? '#4a7c59' : latestStatus === 'suboptimal' ? '#d68910' : '#c0392b'}">${latest.value}</strong> ${m.unit}</span>
+                        </div>
+                        <div class="chart-container">
+                            <div class="optimal-band" style="bottom:${optimalBottomPct}%;height:${optimalHeightPct}%"></div>
+                            <div class="chart-points-container">${pointsHtml}</div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+        
+        function exportLogs() {
+            const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `bloodwork-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+        
+        function importLogs() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        logs = [...logs, ...imported].filter((l, i, arr) => arr.findIndex(x => x.id === l.id) === i);
+                        logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        saveLogs();
+                        renderHistory();
+                        renderMarkerFilter();
+                        renderTrendCharts();
+                        alert('Imported!');
+                    } catch (err) { alert('Invalid file'); }
+                };
+                reader.readAsText(e.target.files[0]);
+            };
+            input.click();
+        }
+        
+        function clearLogs() {
+            if (confirm('Delete ALL logs?')) {
+                logs = [];
+                saveLogs();
+                renderHistory();
+                renderMarkerFilter();
+                renderTrendCharts();
+            }
+        }
+        
+        init();
+    </script>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.querySelector('.theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

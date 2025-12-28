@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Personalized Protocol</title>
+    <style>
+        :root { --bg: #f5f5f5; --bg-gradient: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); --card-bg: white; --text: #333; --text-secondary: #666; --text-muted: #999; --accent: #1a5f5f; --accent-light: #e8f4f4; --border: #e0e0e0; --shadow: rgba(0,0,0,0.08); }
+        [data-theme="dark"] { --bg: #121212; --bg-gradient: linear-gradient(135deg, #0d2f2f 0%, #1a4a4a 100%); --card-bg: #1e1e1e; --text: #e8e8e8; --text-secondary: #aaa; --text-muted: #777; --accent: #3d9a9a; --accent-light: #1a3a3a; --border: #333; --shadow: rgba(0,0,0,0.3); }
+        .theme-toggle { position: fixed; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; font-size: 18px; cursor: pointer; z-index: 1000; backdrop-filter: blur(10px); }
+        [data-theme="dark"] .theme-toggle { background: rgba(0,0,0,0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); min-height: 100vh; padding: 12px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        header { background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); color: white; padding: 20px; border-radius: 16px; margin-bottom: 16px; text-align: center; }
+        header h1 { font-size: 22px; margin-bottom: 4px; }
+        header p { opacity: 0.9; font-size: 13px; }
+        .nav-link { display: inline-block; margin-top: 10px; color: white; opacity: 0.9; text-decoration: none; font-size: 12px; }
+        .nav-link:hover { opacity: 1; text-decoration: underline; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; }
+        .card h2 { color: var(--accent); font-size: 16px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+        .card h3 { color: #4a7c59; font-size: 14px; margin: 16px 0 10px 0; }
+        .data-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .data-source { background: #f8f8f8; border-radius: 12px; padding: 16px; border: 2px solid var(--border); transition: all 0.2s; }
+        .data-source.connected { border-color: #4a7c59; background: #f0f8f0; }
+        .data-source.missing { border-color: #ddd; background: #fafafa; }
+        .source-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .source-name { font-weight: 600; font-size: 13px; color: var(--text); }
+        .source-status { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; }
+        .source-status.found { background: #e8f5e8; color: #27ae60; }
+        .source-status.missing { background: #f0f0f0; color: var(--text-muted); }
+        .source-detail { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
+        .source-link { display: inline-block; font-size: 11px; color: var(--accent); text-decoration: none; font-weight: 600; }
+        .source-link:hover { text-decoration: underline; }
+        .generate-section { text-align: center; padding: 20px; }
+        .generate-btn { padding: 16px 40px; background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26, 95, 95, 0.3); }
+        .generate-note { font-size: 11px; color: var(--text-secondary); margin-top: 10px; }
+        .protocol { display: none; }
+        .protocol.active { display: block; }
+        .protocol-header { background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); color: white; padding: 30px; border-radius: 16px; margin-bottom: 16px; text-align: center; }
+        .protocol-header h1 { font-size: 26px; margin-bottom: 6px; }
+        .protocol-header .date { opacity: 0.9; font-size: 13px; }
+        .protocol-header .name { font-size: 16px; margin-top: 8px; opacity: 0.95; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .summary-stat { background: #f8f8f8; padding: 16px; border-radius: 12px; text-align: center; }
+        .summary-stat .value { font-size: 28px; font-weight: 700; color: var(--accent); }
+        .summary-stat .value.high { color: #e85a4f; }
+        .summary-stat .value.medium { color: #f0ad4e; }
+        .summary-stat .value.good { color: #4a7c59; }
+        .summary-stat .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .priority-list { counter-reset: priority; }
+        .priority-item { display: flex; gap: 14px; padding: 16px; background: #f8f8f8; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid #1a5f5f; }
+        .priority-item.urgent { border-left-color: #e85a4f; background: #fef8f8; }
+        .priority-item.moderate { border-left-color: #f0ad4e; background: #fffbf5; }
+        .priority-number { width: 32px; height: 32px; background: #1a5f5f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+        .priority-item.urgent .priority-number { background: #e85a4f; }
+        .priority-item.moderate .priority-number { background: #f0ad4e; }
+        .priority-content { flex: 1; }
+        .priority-title { font-weight: 600; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+        .priority-detail { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+        .priority-source { font-size: 10px; color: var(--text-muted); margin-top: 6px; }
+        .nutrient-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .nutrient-card { background: #f8f8f8; border-radius: 12px; padding: 16px; border: 2px solid transparent; }
+        .nutrient-card.high-risk { border-color: #e85a4f; background: #fef8f8; }
+        .nutrient-card.medium-risk { border-color: #f0ad4e; background: #fffbf5; }
+        .nutrient-card.tested { border-color: #4a7c59; }
+        .nutrient-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .nutrient-name { font-weight: 700; color: var(--text); font-size: 15px; }
+        .nutrient-status { font-size: 10px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+        .nutrient-status.high { background: #fde8e8; color: #c0392b; }
+        .nutrient-status.medium { background: #fef3cd; color: #d68910; }
+        .nutrient-status.tested { background: #e8f5e8; color: #27ae60; }
+        .nutrient-evidence { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
+        .evidence-tag { display: inline-block; padding: 2px 6px; background: var(--card-bg); border-radius: 8px; margin: 2px; font-size: 10px; border: 1px solid var(--border); }
+        .nutrient-foods { font-size: 11px; color: #555; }
+        .nutrient-test { font-size: 10px; color: var(--accent); margin-top: 6px; font-weight: 600; }
+        .nutrient-result { font-size: 12px; color: #4a7c59; margin-top: 6px; font-weight: 600; background: #e8f5e8; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+        .timeline { position: relative; padding-left: 30px; }
+        .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #e0e0e0; }
+        .timeline-item { position: relative; padding-bottom: 24px; }
+        .timeline-item::before { content: ''; position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; background: #1a5f5f; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px #1a5f5f; }
+        .timeline-week { font-weight: 700; color: var(--accent); font-size: 14px; margin-bottom: 8px; }
+        .timeline-tasks { font-size: 13px; color: #444; line-height: 1.6; }
+        .timeline-tasks ul { margin-left: 18px; margin-top: 6px; }
+        .timeline-tasks li { margin-bottom: 4px; }
+        .test-panel { background: linear-gradient(135deg, #1a5f5f 0%, #2d8a8a 100%); border-radius: 12px; padding: 20px; color: white; }
+        .test-panel h3 { color: white; margin-bottom: 12px; font-size: 15px; }
+        .test-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .test-item { background: rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 20px; font-size: 12px; }
+        .test-item.priority { background: rgba(255,255,255,0.3); font-weight: 600; }
+        .habit-checklist { display: grid; gap: 8px; }
+        .habit-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f8f8f8; border-radius: 10px; }
+        .habit-checkbox { width: 22px; height: 22px; border: 2px solid #1a5f5f; border-radius: 6px; flex-shrink: 0; }
+        .habit-text { flex: 1; font-size: 14px; color: var(--text); }
+        .habit-why { font-size: 11px; color: var(--text-secondary); text-align: right; }
+        .food-focus { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .food-item { background: #f8f8f8; padding: 12px; border-radius: 10px; text-align: center; }
+        .food-name { font-weight: 600; color: var(--text); font-size: 13px; margin-bottom: 4px; }
+        .food-nutrients { font-size: 10px; color: var(--text-secondary); }
+        .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #1a5f5f; color: white; }
+        .btn-secondary { background: #f0f0f0; color: var(--text-secondary); }
+        .btn-outline { background: var(--card-bg); border: 2px solid #1a5f5f; color: var(--accent); }
+        .disclaimer { margin-top: 24px; padding: 16px; background: #f8f8f8; border-radius: 10px; font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.5; }
+        .section-intro { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+        @media print {
+            body { background: var(--card-bg); padding: 0; font-size: 11pt; }
+            .no-print { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; margin-bottom: 12px; }
+            .protocol-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 20px; }
+            .priority-item, .nutrient-card, .timeline-item { page-break-inside: avoid; }
+            .summary-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="no-print">
+            <h1>Protocol Generator</h1>
+            <p>Your personalized action plan based on your data</p>
+            <a href="index.html" class="nav-link">← Back to Dashboard</a>
+        </header>
+        
+        <div id="collector" class="no-print">
+            <div class="card">
+                <h2>Your Data Sources</h2>
+                <p class="section-intro">The more data you provide, the more personalized your protocol. Each source adds specificity.</p>
+                <div class="data-sources" id="dataSources"></div>
+                <div class="generate-section">
+                    <button class="generate-btn" id="generateBtn" onclick="generateProtocol()">Generate My Protocol</button>
+                    <p class="generate-note" id="generateNote"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="protocol" class="protocol"></div>
+    </div>
+
+    <script>
+        const nutrientDB = {
+            magnesium: { name: 'Magnesium', test: 'RBC Magnesium', foods: 'Pumpkin seeds, spinach, dark chocolate, almonds', signs: 'Cramps, twitches, anxiety, insomnia' },
+            b_vitamins: { name: 'B Vitamins', test: 'B12, Folate, Homocysteine', foods: 'Eggs, liver, nutritional yeast, salmon', signs: 'Fatigue, brain fog, mood issues' },
+            vitamin_c: { name: 'Vitamin C', test: 'Plasma Vitamin C', foods: 'Bell peppers, citrus, strawberries, broccoli', signs: 'Slow healing, bruising, frequent illness' },
+            vitamin_d: { name: 'Vitamin D', test: 'Vitamin D (25-OH)', foods: 'Sun exposure, fatty fish, eggs', signs: 'Fatigue, bone pain, depression' },
+            iron: { name: 'Iron', test: 'Ferritin, CBC', foods: 'Red meat, liver, oysters, spinach + Vit C', signs: 'Fatigue, pale skin, cold hands' },
+            zinc: { name: 'Zinc', test: 'Plasma Zinc (fasted)', foods: 'Oysters, beef, pumpkin seeds', signs: 'Frequent illness, slow healing, hair loss' },
+            calcium: { name: 'Calcium', test: 'Calcium, Vit D, PTH', foods: 'Dairy, sardines, leafy greens', signs: 'Cramps, brittle nails' },
+            chromium: { name: 'Chromium', test: 'Fasting Insulin, HbA1c', foods: 'Broccoli, beef, whole grains', signs: 'Blood sugar swings, cravings' },
+            potassium: { name: 'Potassium', test: 'Basic Metabolic Panel', foods: 'Potatoes, bananas, avocado', signs: 'Weakness, cramps, palpitations' },
+            omega3: { name: 'Omega-3s', test: 'Omega-3 Index', foods: 'Salmon, sardines, mackerel', signs: 'Dry skin, brain fog, joint pain' }
+        };
+
+        const actionDB = {
+            sugar: { title: 'Cut Added Sugar', detail: 'If sugar is in the first 3 ingredients, skip it. Addresses 6+ nutrient deficiencies at once.', urgency: 'urgent', habits: ['no_sugar'] },
+            caffeine_timing: { title: 'Fix Caffeine Timing', detail: 'Move coffee/tea at least 1 hour away from meals to protect iron, zinc, and calcium absorption.', urgency: 'moderate', habits: ['caffeine_timing'] },
+            sleep: { title: 'Prioritize 7+ Hours Sleep', detail: 'Sleep deprivation depletes B vitamins and magnesium while increasing stress hormones.', urgency: 'urgent', habits: ['sleep_7'] },
+            stress: { title: 'Address Chronic Stress', detail: 'Stress can double magnesium needs. Focus on boundaries, movement, and recovery practices.', urgency: 'urgent', habits: [] },
+            movement: { title: 'Daily Movement (20+ min)', detail: 'Walk, workout, or any activity. Improves nutrient utilization and vitamin D synthesis.', urgency: 'moderate', habits: ['movement'] },
+            alcohol: { title: 'Reduce Alcohol Intake', detail: 'Alcohol depletes B vitamins, magnesium, zinc, and more. Even moderate intake has impact.', urgency: 'moderate', habits: [] },
+            fish: { title: 'Add Fatty Fish 2x/Week', detail: 'Salmon, sardines, mackerel are the best omega-3 sources. Consider fish oil if you don\'t eat fish.', urgency: 'moderate', habits: [] },
+            whole_foods: { title: 'Shift to Whole Foods', detail: 'Each processed food swap for whole food improves nutrient density dramatically.', urgency: 'moderate', habits: ['whole_foods'] }
+        };
+
+        const powerFoods = [
+            { name: 'Eggs', nutrients: ['B12', 'D', 'Choline'] },
+            { name: 'Salmon', nutrients: ['Omega-3', 'D', 'B12'] },
+            { name: 'Spinach', nutrients: ['Mg', 'Iron', 'Folate'] },
+            { name: 'Pumpkin Seeds', nutrients: ['Mg', 'Zinc', 'Iron'] },
+            { name: 'Beef/Liver', nutrients: ['B12', 'Iron', 'Zinc'] },
+            { name: 'Sardines', nutrients: ['Omega-3', 'Ca', 'D'] },
+            { name: 'Avocado', nutrients: ['K', 'Mg', 'Folate'] },
+            { name: 'Dark Chocolate', nutrients: ['Mg', 'Iron', 'Zinc'] }
+        ];
+
+        let data = { calculator: null, symptoms: null, bloodwork: null, habits: null, medications: null };
+
+        function init() {
+            loadAllData();
+            renderDataSources();
+            updateGenerateButton();
+        }
+
+        function loadAllData() {
+            const calc = localStorage.getItem('calculator_results');
+            if (calc) data.calculator = JSON.parse(calc);
+            
+            const symp = localStorage.getItem('symptom_results');
+            if (symp) data.symptoms = JSON.parse(symp);
+            
+            const blood = localStorage.getItem('bloodwork_logs');
+            if (blood) { const logs = JSON.parse(blood); if (logs.length > 0) data.bloodwork = logs; }
+            
+            const habits = localStorage.getItem('subtraction_habits');
+            if (habits) { const h = JSON.parse(habits); if (Object.keys(h).length > 0) data.habits = h; }
+            
+            const meds = localStorage.getItem('medication_results');
+            if (meds) data.medications = JSON.parse(meds);
+        }
+
+        function renderDataSources() {
+            const sources = [
+                { name: 'Risk Calculator', key: 'calculator', icon: '🎯', found: !!data.calculator, detail: data.calculator ? `${data.calculator.factors?.length || 0} risk factors identified` : 'Lifestyle-based depletion analysis', link: 'calculator.html', linkText: 'Take Assessment →' },
+                { name: 'Symptom Mapper', key: 'symptoms', icon: '🩺', found: !!data.symptoms, detail: data.symptoms ? `${data.symptoms.symptoms?.length || 0} symptoms mapped` : 'Symptom-based deficiency signals', link: 'symptoms.html', linkText: 'Map Symptoms →' },
+                { name: 'Medications', key: 'medications', icon: '💊', found: !!data.medications, detail: data.medications ? `${data.medications.medicationNames?.length || 0} medications checked` : 'Drug-nutrient depletions', link: 'medications.html', linkText: 'Check Medications →' },
+                { name: 'Bloodwork Log', key: 'bloodwork', icon: '🔬', found: !!data.bloodwork, detail: data.bloodwork ? `${data.bloodwork.length} test(s) on file` : 'Actual lab results', link: 'bloodwork.html', linkText: 'Log Results →' },
+                { name: 'Habit Tracker', key: 'habits', icon: '✓', found: !!data.habits, detail: data.habits ? `${Object.keys(data.habits).length} days tracked` : 'Compliance patterns', link: 'tracker.html', linkText: 'Start Tracking →' }
+            ];
+            
+            document.getElementById('dataSources').innerHTML = sources.map(s => `
+                <div class="data-source ${s.found ? 'connected' : 'missing'}">
+                    <div class="source-header">
+                        <span class="source-name">${s.icon} ${s.name}</span>
+                        <span class="source-status ${s.found ? 'found' : 'missing'}">${s.found ? '✓ Ready' : 'Not yet'}</span>
+                    </div>
+                    <div class="source-detail">${s.detail}</div>
+                    ${!s.found ? `<a href="${s.link}" class="source-link">${s.linkText}</a>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function updateGenerateButton() {
+            const count = [data.calculator, data.symptoms, data.medications, data.bloodwork, data.habits].filter(Boolean).length;
+            const note = document.getElementById('generateNote');
+            if (count === 0) {
+                note.textContent = 'Complete at least one assessment for a personalized protocol.';
+            } else if (count === 1) {
+                note.textContent = 'Good start! Add more data sources for deeper personalization.';
+            } else if (count < 5) {
+                note.textContent = `${count}/5 sources connected. More data = more specific recommendations.`;
+            } else {
+                note.textContent = 'All sources connected! Your protocol will be fully personalized.';
+            }
+        }
+
+        function generateProtocol() {
+            document.getElementById('collector').style.display = 'none';
+            document.getElementById('protocol').classList.add('active');
+            
+            const analysis = analyzeAllData();
+            renderProtocol(analysis);
+        }
+
+        function analyzeAllData() {
+            const nutrientScores = {};
+            const priorityActions = [];
+            const evidence = {};
+            const tests = new Set();
+            
+            // Initialize nutrients
+            Object.keys(nutrientDB).forEach(k => { nutrientScores[k] = 0; evidence[k] = []; });
+            
+            // Process calculator data
+            if (data.calculator) {
+                Object.entries(data.calculator.nutrientScores || {}).forEach(([k, score]) => {
+                    if (nutrientScores[k] !== undefined) {
+                        nutrientScores[k] += score;
+                        if (score >= 4) evidence[k].push('Lifestyle risk');
+                    }
+                });
+                (data.calculator.factors || []).forEach(f => {
+                    if (actionDB[f.id]) priorityActions.push({ ...actionDB[f.id], source: 'calculator', value: f.value });
+                });
+            }
+            
+            // Process symptom data
+            if (data.symptoms) {
+                (data.symptoms.deficiencies || []).forEach(d => {
+                    const key = d.name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace('vit_', 'vitamin_').replace('b_vitamins', 'b_vitamins').replace('omega_3', 'omega3');
+                    const mappedKey = Object.keys(nutrientDB).find(k => nutrientDB[k].name === d.name || k.includes(d.name.toLowerCase().replace(' ', '_')));
+                    if (mappedKey) {
+                        nutrientScores[mappedKey] += d.score * 2;
+                        evidence[mappedKey].push(`${d.score} symptoms`);
+                    }
+                });
+            }
+            
+            // Process medication data
+            if (data.medications) {
+                const medNutrientMap = {
+                    'b12': 'b_vitamins', 'magnesium': 'magnesium', 'coq10': 'coq10', 'vitamin_d': 'vitamin_d',
+                    'folate': 'b_vitamins', 'zinc': 'zinc', 'iron': 'iron', 'calcium': 'calcium',
+                    'potassium': 'potassium', 'vitamin_c': 'vitamin_c', 'b6': 'b_vitamins', 'vitamin_e': 'vitamin_e',
+                    'b1': 'b_vitamins', 'b2': 'b_vitamins', 'b_vitamins': 'b_vitamins', 'omega3': 'omega3'
+                };
+                (data.medications.depletions || []).forEach(d => {
+                    const mappedKey = medNutrientMap[d.id] || d.id;
+                    if (nutrientScores[mappedKey] !== undefined) {
+                        const severity = d.severity === 'high' ? 4 : d.severity === 'medium' ? 2 : 1;
+                        nutrientScores[mappedKey] += severity;
+                        evidence[mappedKey].push(`${d.sources.length} med${d.sources.length > 1 ? 's' : ''} deplete`);
+                    }
+                });
+            }
+            
+            // Process bloodwork
+            let bloodworkMarkers = {};
+            if (data.bloodwork) {
+                data.bloodwork.forEach(log => {
+                    Object.entries(log.values).forEach(([marker, value]) => {
+                        bloodworkMarkers[marker] = { value, date: log.date };
+                    });
+                });
+            }
+            
+            // Calculate habit compliance
+            let habitCompliance = null;
+            if (data.habits) {
+                const days = Object.keys(data.habits).length;
+                let totalChecks = 0, possibleChecks = days * 5;
+                Object.values(data.habits).forEach(day => {
+                    totalChecks += Object.values(day).filter(Boolean).length;
+                });
+                habitCompliance = Math.round((totalChecks / possibleChecks) * 100);
+            }
+            
+            // Build priority actions if not from calculator
+            if (priorityActions.length === 0) {
+                priorityActions.push({ ...actionDB.sugar, source: 'default' });
+                priorityActions.push({ ...actionDB.sleep, source: 'default' });
+                priorityActions.push({ ...actionDB.caffeine_timing, source: 'default' });
+                priorityActions.push({ ...actionDB.movement, source: 'default' });
+            }
+            
+            // Sort nutrients by score
+            const sortedNutrients = Object.entries(nutrientScores)
+                .map(([k, score]) => ({ key: k, ...nutrientDB[k], score, evidence: evidence[k], bloodwork: bloodworkMarkers[k] }))
+                .sort((a, b) => b.score - a.score);
+            
+            // Build test list
+            sortedNutrients.slice(0, 6).forEach(n => {
+                n.test.split(', ').forEach(t => tests.add(t));
+            });
+            
+            return {
+                nutrients: sortedNutrients,
+                actions: priorityActions.sort((a, b) => (b.value || 2) - (a.value || 2)),
+                tests: [...tests],
+                bloodwork: bloodworkMarkers,
+                habitCompliance,
+                dataCount: [data.calculator, data.symptoms, data.medications, data.bloodwork, data.habits].filter(Boolean).length
+            };
+        }
+
+        function renderProtocol(analysis) {
+            const topNutrients = analysis.nutrients.filter(n => n.score > 0).slice(0, 6);
+            const urgentActions = analysis.actions.filter(a => a.urgency === 'urgent').slice(0, 3);
+            const moderateActions = analysis.actions.filter(a => a.urgency === 'moderate').slice(0, 3);
+            
+            const overallRisk = topNutrients.length > 0 ? (topNutrients[0].score >= 8 ? 'high' : topNutrients[0].score >= 4 ? 'medium' : 'good') : 'good';
+            
+            document.getElementById('protocol').innerHTML = `
+                <div class="protocol-header">
+                    <h1>Your Subtraction Protocol</h1>
+                    <p class="date">Generated ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p class="name">Based on ${analysis.dataCount}/4 data sources</p>
+                </div>
+                
+                <div class="card">
+                    <h2>📊 Your Snapshot</h2>
+                    <div class="summary-grid">
+                        <div class="summary-stat">
+                            <div class="value ${overallRisk}">${topNutrients.length}</div>
+                            <div class="label">Priority Nutrients</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value">${analysis.actions.length}</div>
+                            <div class="label">Action Items</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value">${analysis.tests.length}</div>
+                            <div class="label">Tests to Consider</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value ${analysis.habitCompliance ? (analysis.habitCompliance >= 70 ? 'good' : 'medium') : ''}">${analysis.habitCompliance !== null ? analysis.habitCompliance + '%' : '—'}</div>
+                            <div class="label">Habit Compliance</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🎯 Priority Actions</h2>
+                    <p class="section-intro">Do these in order. Master one before adding the next.</p>
+                    <div class="priority-list">
+                        ${[...urgentActions, ...moderateActions].map((a, i) => `
+                            <div class="priority-item ${a.urgency}">
+                                <div class="priority-number">${i + 1}</div>
+                                <div class="priority-content">
+                                    <div class="priority-title">${a.title}</div>
+                                    <div class="priority-detail">${a.detail}</div>
+                                    ${a.source !== 'default' ? `<div class="priority-source">Identified from your ${a.source === 'calculator' ? 'risk assessment' : 'symptoms'}</div>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🧪 Your Nutrient Focus Areas</h2>
+                    <p class="section-intro">Based on your lifestyle factors${data.symptoms ? ' and symptoms' : ''}.</p>
+                    <div class="nutrient-grid">
+                        ${topNutrients.map(n => {
+                            const risk = n.score >= 8 ? 'high' : n.score >= 4 ? 'medium' : '';
+                            const hasBloodwork = analysis.bloodwork[n.key];
+                            return `
+                                <div class="nutrient-card ${risk ? risk + '-risk' : ''} ${hasBloodwork ? 'tested' : ''}">
+                                    <div class="nutrient-header">
+                                        <span class="nutrient-name">${n.name}</span>
+                                        ${risk ? `<span class="nutrient-status ${risk}">${risk === 'high' ? 'Priority' : 'Monitor'}</span>` : ''}
+                                        ${hasBloodwork ? `<span class="nutrient-status tested">Tested</span>` : ''}
+                                    </div>
+                                    ${n.evidence.length > 0 ? `<div class="nutrient-evidence">${n.evidence.map(e => `<span class="evidence-tag">${e}</span>`).join('')}</div>` : ''}
+                                    ${hasBloodwork ? `<div class="nutrient-result">Last result: ${hasBloodwork.value}</div>` : ''}
+                                    <div class="nutrient-foods"><strong>Foods:</strong> ${n.foods}</div>
+                                    <div class="nutrient-test">Test: ${n.test}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🔬 Tests to Request</h2>
+                    <p class="section-intro">Take this list to your doctor or order through a direct lab service.</p>
+                    <div class="test-panel">
+                        <h3>Recommended Panel</h3>
+                        <div class="test-list">
+                            ${analysis.tests.slice(0, 4).map(t => `<span class="test-item priority">${t}</span>`).join('')}
+                            ${analysis.tests.slice(4).map(t => `<span class="test-item">${t}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>📅 Your 30-Day Timeline</h2>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-week">Week 1: Foundation</div>
+                            <div class="timeline-tasks">
+                                <ul>
+                                    <li><strong>${urgentActions[0]?.title || 'Cut added sugar'}</strong> - Start with the highest-impact change</li>
+                                    <li>Begin tracking with the Habit Tracker</li>
+                                    <li>Schedule bloodwork appointment</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-week">Week 2: Build</div>
+                            <div class="timeline-tasks">
+                                <ul>
+                                    <li><strong>${urgentActions[1]?.title || moderateActions[0]?.title || 'Add second habit'}</strong></li>
+                                    <li>Complete bloodwork</li>
+                                    <li>Add 2-3 power foods from the list below</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-week">Week 3: Optimize</div>
+                            <div class="timeline-tasks">
+                                <ul>
+                                    <li>Review bloodwork results → <a href="bloodwork.html">Log them here</a></li>
+                                    <li>Adjust focus based on actual levels</li>
+                                    <li>Add third habit if first two are consistent</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-week">Week 4: Sustain</div>
+                            <div class="timeline-tasks">
+                                <ul>
+                                    <li>Evaluate: What's working? What needs adjustment?</li>
+                                    <li>Plan Month 2 focus areas</li>
+                                    <li>Consider re-taking assessments to track progress</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>✅ Daily Habits to Track</h2>
+                    <p class="section-intro">Print this page or use the <a href="tracker.html">Habit Tracker</a>.</p>
+                    <div class="habit-checklist">
+                        <div class="habit-row"><div class="habit-checkbox"></div><span class="habit-text">No added sugar</span><span class="habit-why">Protects 6+ nutrients</span></div>
+                        <div class="habit-row"><div class="habit-checkbox"></div><span class="habit-text">Caffeine 1hr from meals</span><span class="habit-why">Mineral absorption</span></div>
+                        <div class="habit-row"><div class="habit-checkbox"></div><span class="habit-text">7+ hours sleep</span><span class="habit-why">Recovery & stress</span></div>
+                        <div class="habit-row"><div class="habit-checkbox"></div><span class="habit-text">20 min movement</span><span class="habit-why">Nutrient utilization</span></div>
+                        <div class="habit-row"><div class="habit-checkbox"></div><span class="habit-text">Whole food meals</span><span class="habit-why">Nutrient density</span></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>🥗 Power Foods for You</h2>
+                    <p class="section-intro">These multi-hitters address your priority nutrients.</p>
+                    <div class="food-focus">
+                        ${powerFoods.map(f => `
+                            <div class="food-item">
+                                <div class="food-name">${f.name}</div>
+                                <div class="food-nutrients">${f.nutrients.join(', ')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="actions no-print">
+                    <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+                    <button class="btn btn-secondary" onclick="startOver()">← Start Over</button>
+                    <a href="tracker.html" class="btn btn-outline">Open Habit Tracker</a>
+                    <a href="shopping.html" class="btn btn-outline">Shopping List</a>
+                </div>
+                
+                <div class="disclaimer">
+                    <strong>Disclaimer:</strong> This protocol is for educational purposes only and is not medical advice. 
+                    It's based on general associations between lifestyle factors, symptoms, and nutrient status. 
+                    Always consult a healthcare provider before making significant dietary changes, starting supplements, or interpreting lab results.
+                    Do not stop prescribed medications without medical guidance.
+                </div>
+            `;
+        }
+
+        function startOver() {
+            document.getElementById('collector').style.display = 'block';
+            document.getElementById('protocol').classList.remove('active');
+            document.getElementById('protocol').innerHTML = '';
+        }
+
+        init();
+    </script>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.querySelector('.theme-toggle');
+                    if (btn) btn.textContent = '☀️';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
