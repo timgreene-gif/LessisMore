@@ -9,58 +9,59 @@
 
 ---
 
-## Logo Generation Prompt
+## Logo Generation Prompts
 
-### Primary Prompt (Recommended)
+### Primary Prompt
 
 ```
 Minimalist logo for "Lightward", a wellness brand about lifting health burdens. Design features
-a subtle upward arrow or directional element integrated with light rays or a sunrise motif,
-symbolizing movement toward lightness and clarity. Color palette: deep teal (#1a5f5f) as primary
-with warm coral accent (#e85a4f). Clean, modern sans-serif typography. The mark should feel
-uplifting, hopeful, and forward-moving. White background, vector-style, suitable for app icon
-and web use. Premium health tech aesthetic.
+an upward-pointing arrow seamlessly integrated with sunrise rays emanating from behind it.
+The arrow represents forward movement and progress; the light rays represent dawn, clarity,
+and enlightenment. Color palette: deep teal (#1a5f5f) for the arrow, warm coral (#e85a4f) or
+soft gold (#f4d03f) for the light rays. Clean, modern aesthetic. White background, vector-style,
+suitable for app icon. Premium health tech brand. Hopeful and uplifting.
 ```
 
-### Alternative Prompts
+### Variations
 
-**Option A - Abstract Direction:**
+**V1 - Arrow with Radiating Lines:**
 ```
-Modern abstract logo for "Lightward" health brand. A stylized arrow or chevron pointing upward
-and forward, with subtle light/glow effect. Suggests movement, progress, lifting. Deep teal
-(#1a5f5f) with gradient to lighter teal (#2d8a8a). Minimal, geometric, works as app icon.
-Clean vector style. Conveys hope and forward momentum.
-```
-
-**Option B - Light Motif:**
-```
-Logo for "Lightward" wellness app. Simple sunrise or dawn icon — a semi-circle with radiating
-lines suggesting first light of day. Represents enlightenment and new beginnings. Teal primary
-(#1a5f5f) with coral accent (#e85a4f). Paired with clean modern wordmark. Minimal flat design,
-scalable for favicon to billboard.
+Logo mark for "Lightward" health app. A bold upward chevron or arrow with 3-5 radiating lines
+behind it suggesting sunrise or light burst. Teal arrow (#1a5f5f), coral rays (#e85a4f).
+Geometric, minimal, balanced. Works at 32x32 favicon size. Modern wellness brand aesthetic.
+Vector flat design.
 ```
 
-**Option C - Lettermark:**
+**V2 - Sunrise Horizon Arrow:**
 ```
-Lettermark logo using "L" or "LW" for "Lightward". The letter incorporates an upward directional
-element or light ray. Deep teal (#1a5f5f) color. Modern geometric sans-serif style. Minimal
-design suitable for app icon. Suggests upward movement and illumination. Professional and
-approachable.
-```
-
-**Option D - Negative Space:**
-```
-Clever negative space logo for "Lightward". A circle or rounded shape where negative space
-creates either a path leading upward or rays of light. Deep teal (#1a5f5f) on white. The design
-reveals its meaning on second look. Modern, memorable, works at all sizes. Health and wellness
-brand with premium feel.
+"Lightward" logo featuring an upward arrow emerging from a curved horizon line, with subtle
+sun rays spreading upward. Represents rising, new day, moving toward light. Deep teal primary
+(#1a5f5f) with gradient to lighter teal (#2d8a8a). Minimal strokes, clean geometry. App icon
+ready. Health and wellness brand.
 ```
 
-**Option E - Feather/Lightness:**
+**V3 - Abstract Sun Arrow:**
 ```
-Logo for "Lightward" featuring a stylized feather or leaf drifting upward, symbolizing lightness
-and release of burden. Single flowing line, minimal strokes. Teal (#1a5f5f) color. Elegant,
-organic, calming. Paired with light modern wordmark. Suggests weightlessness and natural health.
+Abstract logo combining a circle (sun) with an integrated upward arrow pointing out of it.
+The arrow breaks through the top of the circle, suggesting breakthrough and emergence into
+light. Teal (#1a5f5f) with warm gold accent (#f4d03f). Minimal, symbolic, memorable.
+"Lightward" wellness brand. Vector style.
+```
+
+**V4 - Stacked Rays Arrow:**
+```
+Minimalist logo for "Lightward". Three or four horizontal lines stacked, getting progressively
+shorter toward the top, forming both an abstract sunrise AND an upward-pointing arrow shape.
+Single color: deep teal (#1a5f5f). Clever dual meaning. Ultra-minimal, works tiny. Modern
+health tech brand.
+```
+
+**V5 - Glowing Arrow:**
+```
+Simple upward arrow with a soft glow or halo effect behind it, suggesting light emanating
+outward. The arrow is solid teal (#1a5f5f), the glow is subtle coral/gold gradient. Represents
+being guided toward the light. Clean, centered, iconic. "Lightward" wellness app logo.
+Premium minimal design.
 ```
 
 ---
