@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect fill="#1a5f5f" width="32" height="32" rx="6"/>
+  <!-- Simplified rays for small size -->
+  <g fill="#e85a4f" opacity="0.85">
+    <rect x="15" y="3" width="2" height="7" rx="1"/>
+    <rect x="15" y="3" width="2" height="7" rx="1" transform="rotate(-35 16 16)"/>
+    <rect x="15" y="3" width="2" height="7" rx="1" transform="rotate(35 16 16)"/>
+  </g>
+  <!-- Upward arrow - simplified -->
+  <path fill="white" d="M16 8 L22 15 L18 15 L18 26 L14 26 L14 15 L10 15 Z"/>
+</svg>

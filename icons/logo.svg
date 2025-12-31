@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Sunrise rays emanating from behind arrow -->
+  <g fill="#e85a4f">
+    <rect x="48" y="8" width="4" height="24" rx="2"/>
+    <rect x="48" y="8" width="4" height="24" rx="2" transform="rotate(-30 50 50)"/>
+    <rect x="48" y="8" width="4" height="24" rx="2" transform="rotate(-60 50 50)"/>
+    <rect x="48" y="8" width="4" height="24" rx="2" transform="rotate(30 50 50)"/>
+    <rect x="48" y="8" width="4" height="24" rx="2" transform="rotate(60 50 50)"/>
+  </g>
+  <!-- Upward arrow -->
+  <path fill="#1a5f5f" d="M50 20 L70 45 L58 45 L58 85 L42 85 L42 45 L30 45 Z"/>
+</svg>

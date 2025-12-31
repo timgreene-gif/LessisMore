@@ -89,6 +89,39 @@ Premium minimal design.
 
 ---
 
+## Icon Files Created
+
+SVG icons have been created in `/icons/`:
+
+| File | Purpose | Description |
+|------|---------|-------------|
+| `logo.svg` | Brand mark | Arrow + rays on transparent background |
+| `icon.svg` | App icon | Arrow + rays on teal rounded square |
+| `favicon.svg` | Browser tab | Simplified version for small sizes |
+
+### Generate PNG Icons
+
+To generate PNG versions for maximum browser compatibility, run:
+
+```bash
+# Using ImageMagick
+convert -background none icons/icon.svg -resize 512x512 icons/icon-512.png
+convert -background none icons/icon.svg -resize 192x192 icons/icon-192.png
+convert -background none icons/icon.svg -resize 180x180 icons/apple-touch-icon.png
+convert -background none icons/favicon.svg -resize 32x32 icons/favicon-32.png
+convert -background none icons/favicon.svg -resize 16x16 icons/favicon-16.png
+
+# Using Inkscape
+inkscape icons/icon.svg -w 512 -h 512 -o icons/icon-512.png
+```
+
+### Online Alternatives
+
+- [CloudConvert](https://cloudconvert.com/svg-to-png) - SVG to PNG
+- [RealFaviconGenerator](https://realfavicongenerator.net/) - Full favicon package
+
+---
+
 ## Key Symbolism to Capture
 
 1. **Direction** - Moving forward, upward, toward something better
