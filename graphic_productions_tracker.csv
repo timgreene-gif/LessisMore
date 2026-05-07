@@ -1,0 +1,12 @@
+Project ID,Project Name,DoD Division,Requestor / POC,Designer Assigned,Status,Revision Round,Approval Status,Date Requested,Due Date,Date Delivered,Notes
+GP-001,Recruitment Poster Series,Army,SFC J. Smith,,Intake,0,Pending,2026-05-01,2026-05-20,,Awaiting brand assets from requestor
+GP-002,Annual Report Infographics,Navy,LT M. Johnson,A. Designer,Design,0,Pending,2026-04-22,2026-05-15,,Five infographics; data due 05-08
+GP-003,Squadron Patch Update,Air Force,Capt R. Davis,B. Designer,Review,1,In Review,2026-04-10,2026-05-10,,Embroidery vendor specs attached
+GP-004,Recruiting Booth Banners,Marines,GySgt T. Martinez,A. Designer,Revision,2,Changes Requested,2026-03-28,2026-05-12,,Color match issue on red — proof reprint
+GP-005,Mission Patch Concept,Space Force,Maj L. Chen,C. Designer,Approved,1,Approved,2026-03-15,2026-05-01,,Awaiting print vendor PO
+GP-006,Safety Campaign Posters,Coast Guard,LCDR P. Nguyen,B. Designer,Delivered,2,Approved,2026-02-20,2026-04-25,2026-04-24,Final files archived in /deliverables
+,,,,,,,,,,,
+# Allowed values (reference — do not treat as data rows),,,,,,,,,,,
+# DoD Division: Army | Navy | Air Force | Marines | Space Force | Coast Guard,,,,,,,,,,,
+# Status: Intake | Design | Review | Revision | Approved | Delivered,,,,,,,,,,,
+# Approval Status: Pending | In Review | Changes Requested | Approved | Rejected,,,,,,,,,,,
